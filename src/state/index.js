@@ -1,4 +1,3 @@
-const state = {
+export default {
   root: 0,
 };
-export default state;

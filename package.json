@@ -22,7 +22,8 @@
     "react-dom": "^16.12.0",
     "react-redux": "^7.1.3",
     "react-router-dom": "^5.1.2",
-    "redux": "^4.0.4"
+    "redux": "^4.0.4",
+    "styled-components": "^4.4.1"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.7.6",
@@ -36,7 +37,7 @@
   "scripts": {
     "lint": "eslint src",
     "prettier": "prettier --write \"src/**/*.{js,json}\"",
-    "start": "parcel index.html",
+    "start": "parcel --no-autoinstall index.html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "browserslist": [
