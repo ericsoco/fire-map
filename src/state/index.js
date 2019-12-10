@@ -1,4 +1,4 @@
 const state = {
-  root: 0
+  root: 0,
 };
 export default state;

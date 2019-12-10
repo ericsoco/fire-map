@@ -15,8 +15,8 @@ render(
   <Provider store={store}>
     <BrowserRouter>
       <Switch>
-        <Route path={ '/' } exact component={ App } />
-        <Route component={ FourOhFour } />
+        <Route path={'/'} exact component={App} />
+        <Route component={FourOhFour} />
       </Switch>
     </BrowserRouter>
   </Provider>,
