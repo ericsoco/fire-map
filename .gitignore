@@ -1,3 +1,4 @@
 .*cache/
+.env.local
 dist/
 node_modules/

@@ -7,7 +7,7 @@ import { ThemeProvider } from 'styled-components';
 
 import initialState from './state';
 import rootReducer from './state/root-reducer';
-import theme, { GlobalStyles } from './view/theme';
+import theme, { GlobalStyles } from './view/style/theme';
 import App from './view/app';
 import FourOhFour from './view/404';
 
