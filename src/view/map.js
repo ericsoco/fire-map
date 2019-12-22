@@ -23,7 +23,7 @@ export default function Map() {
         pickable={true}
         stroked={false}
         filled={true}
-        extruded={true}
+        extruded={false}
         lineWidthScale={20}
         lineWidthMinPixels={2}
         getFillColor={[160, 160, 180, 200]}
