@@ -17,7 +17,9 @@ const cheerio = require('cheerio');
 const chalk = require('chalk');
 const fs = require('fs');
 const https = require('https');
+const mapshaper = require('mapshaper');
 const mkdirp = require('mkdirp');
+const scale = require('d3-scale');
 
 const HOST = 'https://rmgsc.cr.usgs.gov';
 const ROOT_DIR = `${HOST}/outgoing/GeoMAC`;
@@ -28,8 +30,9 @@ const getPath = ({ year, state }) =>
 
 const BODY_404 = /File not found: Link broken/;
 const BACK_LINK_TEXT = /To Parent Directory/;
-const ZIP_FILE = /(\.zip)$/;
-
+const ACTIVE_PERIM_NAME = /(ActivePerim)/;
+const SHP_FILE = /(\.shp)$/;
+const SHAPEFILE_EXTS = ['shp', 'dbf', 'prj'];
 const FILE_ALREADY_EXISTS = 'already exists';
 
 main();
@@ -84,7 +87,7 @@ function fetchFiresPerConfig(config, dest) {
       const stateYear = stateYears.shift();
       fetchFiresForStateYear({ ...stateYear, dest }, next);
     } else {
-      console.log(chalk.bold(chalk.cyan(`✅  All data fetched.`)));
+      console.log(chalk.bold(chalk.cyan(`✅ All data fetched.`)));
       process.exitCode = 0;
     }
   };
@@ -94,25 +97,30 @@ function fetchFiresPerConfig(config, dest) {
 
 function fetchFiresForStateYear(params, cb) {
   const path = getPath(params);
-  console.log(chalk.bold(`☁️  fetching from: ${path}`));
-  console.log(chalk.bold(`⬇️  destination path: ${params.dest}`));
+  console.log(chalk.bold(`☁️ fetching from: ${path}`));
+  console.log(chalk.bold(`⬇️ destination path: ${params.dest}`));
 
   axios(path)
-    .then(response => parseStatePage({ ...params, path }, response, cb))
+    .then(response => scrapeStatePage({ ...params, path }, response, cb))
     .catch(logError);
 }
 
-function parseStatePage(params, response, cb) {
+function scrapeStatePage(params, response, onPageComplete) {
   const html = response.data;
   const $ = cheerio.load(html);
 
   if (BODY_404.test(html)) {
-    cb(new Error(`🤷 404: Invalid path: ${params.path}`));
+    onPageComplete(new Error(`🤷 404: Invalid path: ${params.path}`));
   }
 
   const links = $('a')
-    // Do not follow back pagination link
-    .filter((i, el) => !BACK_LINK_TEXT.test($(el).text()))
+    .filter(
+      (i, el) =>
+        // Do not follow back pagination link
+        !BACK_LINK_TEXT.test($(el).text()) &&
+        // Scrape only individual fire archives, not active perimeters
+        !ACTIVE_PERIM_NAME.test($(el).text())
+    )
     // Convert to JS array for serial processing
     .toArray();
 
@@ -121,22 +129,22 @@ function parseStatePage(params, response, cb) {
       const fireNode = $(links.shift());
       const fire = fireNode.text();
       axios(getAbsoluteURL(fireNode.attr('href')))
-        .then(response => parseFirePage({ ...params, fire }, response, next))
+        .then(response => scrapeFirePage({ ...params, fire }, response, next))
         .catch(logError);
     } else {
       console.log(
         chalk.bold(
-          chalk.cyan(`✅  All data fetched for ${params.state}/${params.year}`)
+          chalk.cyan(`✅ All data fetched for ${params.state}/${params.year}`)
         )
       );
-      cb();
+      onPageComplete();
     }
   };
 
   next();
 }
 
-function parseFirePage(params, response, cb) {
+function scrapeFirePage(params, response, onPageComplete) {
   const { dest, year, state, fire } = params;
   const destPath = `${dest}/${year}/${state}/${fire}`;
   mkdirp(destPath, (err, made) => {
@@ -146,44 +154,113 @@ function parseFirePage(params, response, cb) {
       );
     }
     if (made) {
-      console.log(`📂 creating new folder: ${destPath}`);
+      console.info(`📂 creating new folder: ${destPath}`);
     }
 
     const html = response.data;
     const $ = cheerio.load(html);
-    const zipLinks = $('a').filter((i, el) => ZIP_FILE.test($(el).text()));
-    const count = { done: 0, total: zipLinks.length };
+    const allLinkNames = $('a')
+      .map((i, el) => $(el).text())
+      .toArray();
+    const allLinkNamesSet = new Set(allLinkNames);
+    const shpLinkNames = allLinkNames
+      .filter(name => SHP_FILE.test(name))
+      .map(name => name.slice(0, -4));
 
-    if (count.total === 0) {
-      cb();
+    // Find only the perimeters for which all necessary files are available
+    const validPerimeterNames = shpLinkNames.filter(name =>
+      SHAPEFILE_EXTS.every(ext => allLinkNamesSet.has(`${name}.${ext}`))
+    );
+
+    const perimeterCount = { done: 0, total: validPerimeterNames.length };
+    if (perimeterCount.total === 0) {
+      onPageComplete();
     }
 
-    zipLinks.each((i, el) => {
-      const filename = $(el).text();
-      const filepath = $(el).attr('href');
-      download(getAbsoluteURL(filepath), `${destPath}/${filename}`, err => {
-        if (err) {
-          if (err === FILE_ALREADY_EXISTS) {
-            console.log(
-              chalk.dim(chalk.green(`↳ File already exists: ${filename}`))
-            );
+    validPerimeterNames.forEach(name => {
+      const fileCount = { done: 0, total: SHAPEFILE_EXTS.length };
+      SHAPEFILE_EXTS.forEach(ext => {
+        const filename = `${name}.${ext}`;
+        const remoteFilepath = getAbsoluteURL(
+          `${response.request.path}/${filename}`
+        );
+        download(remoteFilepath, `${destPath}/${filename}`, err => {
+          if (err) {
+            if (err === FILE_ALREADY_EXISTS) {
+              console.info(
+                chalk.dim(chalk.green(`↳ File already exists: ${filename}`))
+              );
+            } else {
+              logError(
+                new Error(`❌ Error downloading ${filename}:\n${err.message}`)
+              );
+            }
           } else {
-            logError(
-              new Error(`❌ Error downloading ${filename}:\n${err.message}`)
-            );
+            console.log(chalk.green(`↳ Downloaded: ${filename}`));
           }
-        } else {
-          console.log(chalk.green(`↳ Downloaded: ${filename}`));
-        }
 
-        // Call cb() when all zipfiles have been consumed
-        count.done++;
-        if (count.done >= count.total) {
-          cb();
-        }
+          fileCount.done++;
+          if (fileCount.done >= fileCount.total) {
+            try {
+              processPerimeter(destPath, name);
+            } catch (processError) {
+              logError(processError);
+            }
+
+            // Call onPageComplete() when all perimeters have been downloaded + processed
+            perimeterCount.done++;
+            if (perimeterCount.done >= perimeterCount.total) {
+              onPageComplete();
+            }
+          }
+        });
       });
     });
   });
+}
+
+/**
+ * Use `mapshaper` to generate a geojson file from a .shp, .dbf, and .prj file,
+ * simplifying geometry proportional to the .shp filesize.
+ */
+function processPerimeter(folder, perimeterName) {
+  const filePrefix = `${folder}/${perimeterName}`;
+
+  SHAPEFILE_EXTS.forEach(ext => {
+    if (!fs.existsSync(`${filePrefix}.${ext}`)) {
+      throw new Error(
+        `❓ Missing .${ext} file for perimeter: ${perimeterName}`
+      );
+    }
+  });
+
+  const shapefile = `${filePrefix}.shp`;
+  const simplifyPercent = calculateSimplifyPercent(shapefile);
+
+  try {
+    mapshaper.runCommands(
+      `-i ${shapefile} -simplify ${simplifyPercent}% -o ${filePrefix}.geojson format=geojson`
+    );
+  } catch (err) {
+    throw new Error(
+      `❌ Error processing perimeter: ${perimeterName}: ${err.message}`
+    );
+  }
+
+  console.info(
+    `🗜 Mapshaped ${filePrefix} to GeoJSON and simplified by ${simplifyPercent}%`
+  );
+}
+
+function calculateSimplifyPercent(shapefile) {
+  const simplifyScale = scale
+    .scalePow()
+    .domain([10, 500])
+    .range([30, 3])
+    .exponent(0.25);
+  const sizeKB = fs.statSync(shapefile).size / 1024;
+  const percent = simplifyScale(sizeKB);
+  return Math.round(percent * 100) / 100;
 }
 
 //
