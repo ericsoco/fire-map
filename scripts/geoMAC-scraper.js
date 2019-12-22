@@ -49,7 +49,8 @@ function main() {
     const params = {
       year: process.argv[2],
       state: process.argv[3],
-      dest: process.argv[4] || DEFAULT_DEST,
+      fire: process.argv[4],
+      dest: process.argv[5] || DEFAULT_DEST,
     };
     fetchFiresForStateYear(params, err => {
       if (err) {
@@ -115,14 +116,22 @@ function scrapeStatePage(params, response, onPageComplete) {
 
   const links = $('a')
     .filter(
-      (i, el) =>
-        // Do not follow back pagination link
-        !BACK_LINK_TEXT.test($(el).text()) &&
-        // Scrape only individual fire archives, not active perimeters
-        !ACTIVE_PERIM_NAME.test($(el).text())
+      params.fire
+        ? // If `fire` param passed, fetch only that fire
+          (i, el) => $(el).text() === params.fire
+        : // Else, fetch all valid fires on this page
+          (i, el) =>
+            // Do not follow back pagination link
+            !BACK_LINK_TEXT.test($(el).text()) &&
+            // Scrape only individual fire archives, not active perimeters
+            !ACTIVE_PERIM_NAME.test($(el).text())
     )
     // Convert to JS array for serial processing
     .toArray();
+
+  if (params.fire && links.length === 0) {
+    onPageComplete(new Error(`🤷 Invalid fire name: ${params.fire}`));
+  }
 
   const next = () => {
     if (links.length) {
@@ -219,56 +228,13 @@ function scrapeFirePage(params, response, onPageComplete) {
   });
 }
 
-/**
- * Use `mapshaper` to generate a geojson file from a .shp, .dbf, and .prj file,
- * simplifying geometry proportional to the .shp filesize.
- */
-function processPerimeter(folder, perimeterName) {
-  const filePrefix = `${folder}/${perimeterName}`;
-
-  SHAPEFILE_EXTS.forEach(ext => {
-    if (!fs.existsSync(`${filePrefix}.${ext}`)) {
-      throw new Error(
-        `❓ Missing .${ext} file for perimeter: ${perimeterName}`
-      );
-    }
-  });
-
-  const shapefile = `${filePrefix}.shp`;
-  const simplifyPercent = calculateSimplifyPercent(shapefile);
-
-  try {
-    mapshaper.runCommands(
-      `-i ${shapefile} -simplify ${simplifyPercent}% -o ${filePrefix}.geojson format=geojson`
-    );
-  } catch (err) {
-    throw new Error(
-      `❌ Error processing perimeter: ${perimeterName}: ${err.message}`
-    );
-  }
-
-  console.info(
-    `🗜 Mapshaped ${filePrefix} to GeoJSON and simplified by ${simplifyPercent}%`
-  );
-}
-
-function calculateSimplifyPercent(shapefile) {
-  const simplifyScale = scale
-    .scalePow()
-    .domain([10, 500])
-    .range([30, 3])
-    .exponent(0.25);
-  const sizeKB = fs.statSync(shapefile).size / 1024;
-  const percent = simplifyScale(sizeKB);
-  return Math.round(percent * 100) / 100;
-}
-
 //
 // utils
 //
 
 function logError(error) {
-  console.error(chalk.red(error));
+  error.message = chalk.red(error.message);
+  console.error(error);
 }
 
 // GeoMAC links are all relative to the host URL, e.g.
@@ -296,4 +262,49 @@ function download(url, dest, cb) {
       fs.unlink(dest, err => cb(err));
       cb(err);
     });
+}
+
+/**
+ * Use `mapshaper` to generate a geojson file from a .shp, .dbf, and .prj file,
+ * simplifying geometry proportional to the .shp filesize.
+ */
+function processPerimeter(folder, perimeterName) {
+  const filePrefix = `${folder}/${perimeterName}`;
+
+  SHAPEFILE_EXTS.forEach(ext => {
+    if (!fs.existsSync(`${filePrefix}.${ext}`)) {
+      throw new Error(
+        `❓ Missing .${ext} file for perimeter: ${perimeterName}`
+      );
+    }
+  });
+
+  const shapefile = `${filePrefix}.shp`;
+  const simplifyPercent = calculateSimplifyPercent(shapefile);
+
+  try {
+    mapshaper.runCommands(
+      `-i "${shapefile}" -simplify ${simplifyPercent}% -o "${filePrefix}.geojson" format=geojson`,
+      err => {
+        if (err) throw err;
+        console.info(
+          `🗜 Mapshaped ${filePrefix} to GeoJSON and simplified by ${simplifyPercent}%`
+        );
+      }
+    );
+  } catch (err) {
+    err.message = `❌ Error processing perimeter: ${perimeterName}: ${err.message}`;
+    throw err;
+  }
+}
+
+function calculateSimplifyPercent(shapefile) {
+  const simplifyScale = scale
+    .scalePow()
+    .domain([10, 500])
+    .range([30, 3])
+    .exponent(0.25);
+  const sizeKB = fs.statSync(shapefile).size / 1024;
+  const percent = simplifyScale(sizeKB);
+  return Math.round(percent * 100) / 100;
 }
