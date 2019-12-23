@@ -30,6 +30,7 @@
   "devDependencies": {
     "@babel/preset-env": "^7.7.6",
     "@babel/preset-react": "^7.7.4",
+    "@mapbox/geojson-merge": "^1.1.1",
     "axios": "^0.19.0",
     "chalk": "^3.0.0",
     "cheerio": "^1.0.0-rc.3",
@@ -48,7 +49,9 @@
     "start": "parcel --no-autoinstall index.html",
     "test": "echo \"Error: no test specified\" && exit 1",
     "fetch-fires": "node ./scripts/geoMAC-scraper.js",
-    "fetch-all-fires": "node ./scripts/geoMAC-scraper.js static/config/fetch-fire-data-config.json"
+    "fetch-all-fires": "node ./scripts/geoMAC-scraper.js static/config/fire-data-config.json",
+    "merge-fires": "node ./scripts/merge-fires.js",
+    "merge-all-fires": "node ./scripts/merge-fires.js static/config/fire-data-config.json"
   },
   "browserslist": [
     "> 1%",

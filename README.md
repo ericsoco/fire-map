@@ -7,16 +7,25 @@ nvm use
 yarn
 ```
 
-## Running
+## Preparing data
 
-First, fetch the data if you have not already:
+1. Fetch + process the fire perimeter data:
 
 ```
 yarn fetch-all-fires
 ```
 
-(Note, GeoMAC's server sometimes issues 404s when trying to download, and the scraper is not as robust as it could be. You may need to run twice to pick up all fire perimeters.)
+(Note, GeoMAC's server sometimes issues 404s when trying to download, and the scraper is not as robust as it could be. You may need to run more than once to pick up all fire perimeters.)
 
+2. Merge fires per state + year:
+
+```
+yarn merge-all-fires
+```
+
+## Running
+
+First, follow the steps above to fetch + process fire perimeter data.
 Then, run the application:
 
 ```

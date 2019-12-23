@@ -2,15 +2,15 @@
  * Geospatial Multi-Agency Coordination (GeoMAC -- https://www.geomac.gov/)
  * hosts US wildfire perimeter data back through 2010, but offers it only
  * as an HTML file index. This file scrapes the GeoMAC site given specified
- * filters, looking for .zip shapefiles.
+ * filters, looking for .shp + .dbf + .prj shapefile bundles.
  *
  * ## Usage
  * ### Fetch fires for a specific state + year:
- * `yarn fetch-fires <year> <state> [dest]``
- * E.g. `yarn fetch-files 2018 California static/data/fires`
+ * `yarn fetch-fires <year> <state> [dest]`
+ * E.g. `yarn fetch-fires 2018 California static/data/fires`
  * ### Fetch all fires described by config:
- * `yarn fetch-fires <configPath> [dest]``
- * E.g. `yarn fetch-files static/config/fetch-fire-data-config static/data/fires`
+ * `yarn fetch-fires <configPath> [dest]`
+ * E.g. `yarn fetch-fires static/config/fetch-fire-data-config static/data/fires`
  */
 const axios = require('axios');
 const cheerio = require('cheerio');
