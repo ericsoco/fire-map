@@ -2,7 +2,6 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { DECREMENT, INCREMENT } from '../state/root-reducer';
 import Map from './map';
 
 const Title = styled.h1`
@@ -30,10 +29,18 @@ export default function App() {
       <Map />
       <Overlay>
         <Title>{`Hello App (${rootState})`}</Title>
+        {/*
         <div>
-          <Button onClick={() => dispatch({ type: INCREMENT })}>{'+'}</Button>
-          <Button onClick={() => dispatch({ type: DECREMENT })}>{'-'}</Button>
+          <Button onClick={() => dispatch(useMergedFires.start())}>
+            {'+'}
+          </Button>
+          <Button
+            onClick={() => dispatch(loadFiresForYear.start({ year: 2010 }))}
+          >
+            {'-'}
+          </Button>
         </div>
+        */}
       </Overlay>
     </div>
   );

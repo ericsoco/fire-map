@@ -1,19 +1,9 @@
-export const INCREMENT = 'INCREMENT';
-export const DECREMENT = 'DECREMENT';
+import reduceReducers from 'reduce-reducers';
 
-export default function rootReducer(state, action) {
-  switch (action.type) {
-    case INCREMENT:
-      return {
-        ...state,
-        root: state.root + 1,
-      };
-    case DECREMENT:
-      return {
-        ...state,
-        root: state.root - 1,
-      };
-    default:
-      return state;
-  }
-}
+import fires, { INITIAL_STATE as firesState } from './fires-reducer';
+
+const ROOT_STATE = {
+  fires: firesState,
+};
+
+export default reduceReducers(ROOT_STATE, fires);
