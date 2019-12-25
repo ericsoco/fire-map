@@ -1,5 +1,4 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 
 import Map from './map';
@@ -21,26 +20,37 @@ const Button = styled.button`
   cursor: pointer;
 `;
 
+const dates = [
+  new Date('2010-08-01'),
+  new Date('2011-08-01'),
+  new Date('2012-08-01'),
+  new Date('2013-08-01'),
+  new Date('2014-08-01'),
+  new Date('2015-08-01'),
+  new Date('2016-08-01'),
+  new Date('2017-08-01'),
+  new Date('2018-08-01'),
+];
+
 export default function App() {
-  const dispatch = useDispatch();
-  const rootState = useSelector(state => state.root);
+  const [currentDate, setCurrentDate] = useState(dates[0]);
   return (
     <div>
-      <Map />
+      <Map currentDate={currentDate} />
       <Overlay>
-        <Title>{`Hello App (${rootState})`}</Title>
-        {/*
-        <div>
-          <Button onClick={() => dispatch(useMergedFires.start())}>
-            {'+'}
-          </Button>
-          <Button
-            onClick={() => dispatch(loadFiresForYear.start({ year: 2010 }))}
-          >
-            {'-'}
-          </Button>
-        </div>
-        */}
+        <Title>{`${currentDate.getFullYear()}`}</Title>
+        {
+          <div>
+            {dates.map(date => (
+              <Button
+                key={date.getFullYear()}
+                onClick={() => setCurrentDate(date)}
+              >
+                {date.getFullYear()}
+              </Button>
+            ))}
+          </div>
+        }
       </Overlay>
     </div>
   );

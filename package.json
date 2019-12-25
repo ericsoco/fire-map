@@ -33,9 +33,12 @@
     "styled-components": "^4.4.1"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-pipeline-operator": "^7.7.7",
     "@babel/preset-env": "^7.7.6",
     "@babel/preset-react": "^7.7.4",
     "@mapbox/geojson-merge": "^1.1.1",
+    "babel-eslint": "^10.0.3",
+    "babel-plugin-styled-components": "^1.10.6",
     "chalk": "^3.0.0",
     "cheerio": "^1.0.0-rc.3",
     "d3-scale": "^3.2.1",

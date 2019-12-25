@@ -1,3 +1,3 @@
-export function selectMergedFiresRequest(state) {
-  return state.fires.merged;
+export function selectFiresForYearRequest(year) {
+  return state => state.fires.years[year] || null;
 }

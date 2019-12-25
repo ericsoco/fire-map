@@ -3,8 +3,10 @@ import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from '@deck.gl/layers';
 import { StaticMap } from 'react-map-gl';
 
-import useMergedFiresRequest from '../hooks/use-merged-fires-request';
-import { LOADED } from '../state/request-utils';
+import useFiresForYearRequest from '../hooks/use-fires-for-year-request';
+import { LOADED, LOADING } from '../utils/request-utils';
+
+import LoadingIcon from './loading-icon';
 
 const initialViewState = {
   longitude: -121.25,
@@ -17,29 +19,34 @@ const initialViewState = {
 // const basemap = 'mapbox://styles/mapbox/light-v8';
 const basemap = 'mapbox://styles/mapbox/outdoors-v11';
 
-export default function Map() {
-  const mergedFiresRequest = useMergedFiresRequest();
-  // TODO: handle all three mergedFiresRequest.status-es
+export default function Map({ currentDate }) {
+  const firesForYearRequest = useFiresForYearRequest(currentDate.getFullYear());
+  // TODO: handle all status === ERROR
   return (
-    <DeckGL initialViewState={initialViewState} controller={true}>
-      <StaticMap
-        mapboxApiAccessToken={process.env.MapboxAccessToken}
-        mapStyle={basemap}
-      />
-      {mergedFiresRequest && mergedFiresRequest.status === LOADED ? (
-        <GeoJsonLayer
-          id="geojson-layer"
-          data={mergedFiresRequest.data}
-          pickable={true}
-          stroked={false}
-          filled={true}
-          extruded={false}
-          lineWidthScale={20}
-          lineWidthMinPixels={2}
-          getFillColor={[255, 80, 60, 150]}
-          getLineColor={[255, 80, 60, 255]}
+    <div>
+      <DeckGL initialViewState={initialViewState} controller={true}>
+        <StaticMap
+          mapboxApiAccessToken={process.env.MapboxAccessToken}
+          mapStyle={basemap}
         />
-      ) : null}
-    </DeckGL>
+        {firesForYearRequest && firesForYearRequest.status === LOADED && (
+          <GeoJsonLayer
+            id="geojson-layer"
+            data={firesForYearRequest.data}
+            pickable={true}
+            stroked={false}
+            filled={true}
+            extruded={false}
+            lineWidthScale={20}
+            lineWidthMinPixels={2}
+            getFillColor={[255, 80, 60, 150]}
+            getLineColor={[255, 80, 60, 255]}
+          />
+        )}
+      </DeckGL>
+      {firesForYearRequest && firesForYearRequest.status === LOADING && (
+        <LoadingIcon withBackground />
+      )}
+    </div>
   );
 }
