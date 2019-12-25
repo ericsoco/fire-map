@@ -29,6 +29,18 @@ export function errorRequest(request, error) {
   };
 }
 
+export function isLoading(request) {
+  return request && request.status === LOADING;
+}
+
+export function isLoaded(request) {
+  return request && request.status === LOADED;
+}
+
+export function didError(request) {
+  return request && request.status === ERROR;
+}
+
 export function reduceOver(branch) {
   return reducer => (state, action) => ({
     ...state,

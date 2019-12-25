@@ -6,7 +6,7 @@ import { StaticMap } from 'react-map-gl';
 
 import { stateConfigs } from '../constants';
 import useFiresForYearRequest from '../hooks/use-fires-for-year-request';
-import { LOADED, LOADING } from '../utils/request-utils';
+import { isLoading, isLoaded } from '../utils/request-utils';
 
 import LoadingIcon from './loading-icon';
 
@@ -32,7 +32,7 @@ export default function Map({ currentDate, stateCode }) {
           mapboxApiAccessToken={process.env.MapboxAccessToken}
           mapStyle={basemap}
         />
-        {firesForYearRequest && firesForYearRequest.status === LOADED && (
+        {isLoaded(firesForYearRequest) && (
           <GeoJsonLayer
             id="geojson-layer"
             data={firesForYearRequest.data}
@@ -47,9 +47,7 @@ export default function Map({ currentDate, stateCode }) {
           />
         )}
       </DeckGL>
-      {firesForYearRequest && firesForYearRequest.status === LOADING && (
-        <LoadingIcon withBackground />
-      )}
+      {isLoading(firesForYearRequest) && <LoadingIcon withBackground />}
     </div>
   );
 }

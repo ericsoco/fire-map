@@ -7,7 +7,7 @@ import {
   selectAllFiresForYearRequests,
   selectFiresForYearRequest,
 } from '../state/fires-selectors';
-import { LOADED } from '../utils/request-utils';
+import { isLoaded } from '../utils/request-utils';
 
 // TODO: host these online rather than this parcel magic
 import fires2010 from 'url:~/static/data/fires/2010/2010.geojson';
@@ -36,11 +36,7 @@ const FIRES_FOR_YEAR = {
 function getNextRequest(year, allRequests) {
   let prevYear = year - 1;
   let nextRequest = allRequests[prevYear];
-  while (
-    nextRequest &&
-    nextRequest.status === LOADED &&
-    prevYear >= FIRST_YEAR
-  ) {
+  while (isLoaded(nextRequest) && prevYear >= FIRST_YEAR) {
     prevYear--;
     nextRequest = allRequests[prevYear];
   }
@@ -55,14 +51,16 @@ function getNextRequest(year, allRequests) {
  */
 export default function useFiresForYearRequest(selectedYear) {
   const [queuedYear, setQueuedYear] = useState(null);
-  const year = queuedYear || selectedYear;
 
-  const firesForYear = FIRES_FOR_YEAR[year];
-  const dispatch = useDispatch();
+  // Process the selected year request if it has not yet been started,
+  // else process the queued year request
   const selectedYearRequest = useSelector(
     selectFiresForYearRequest(selectedYear)
   );
-  const request = useSelector(selectFiresForYearRequest(year));
+  const queuedYearRequest = useSelector(selectFiresForYearRequest(queuedYear));
+  const readyForNext = isLoaded(selectedYearRequest) && queuedYear;
+  const request = readyForNext ? queuedYearRequest : selectedYearRequest;
+  const year = readyForNext ? queuedYear : selectedYear;
 
   // If a previous year has not yet been loaded,
   // queue it for load after this year
@@ -70,6 +68,9 @@ export default function useFiresForYearRequest(selectedYear) {
     year,
     useSelector(selectAllFiresForYearRequests())
   );
+
+  const firesForYear = FIRES_FOR_YEAR[year];
+  const dispatch = useDispatch();
 
   useEffect(() => {
     // Request only if not already in-flight
@@ -82,7 +83,7 @@ export default function useFiresForYearRequest(selectedYear) {
         .catch(error => {
           dispatch(loadFiresForYear.failure({ year, error }));
         });
-    } else if (request && request.status === LOADED) {
+    } else if (isLoaded(request)) {
       // When this request completes:
       if (nextRequest) {
         // Start the next request if one is queued and not yet started
