@@ -11,6 +11,8 @@
   - [ ] only report 'All data fetched' when actually done
   - [ ] retry failed downloads
   - [ ] refactor to focus on generating one merged file / year
+  - [ ] consider making one all-year/all-fires file at low-res (high simplification),
+        to display on site init
   - [x] fix mapshaper 'Command expects a single value' error
 
 ## Application
@@ -24,3 +26,4 @@
 - [ ] slider
   - [ ] debounce according to distance moved; longer lag for fast motion to make lazy-loading work better
   - [ ] consider coloring segments of slider by year depending if data loaded for that year (like buffering/progress bar)
+  - [ ] label with notable fires (bigger than X acres, biggest per year, etc)

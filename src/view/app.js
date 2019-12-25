@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import styled from 'styled-components';
 
+import { stateConfigs } from '../constants';
 import Map from './map';
 
 const Title = styled.h1`
   color: ${p => p.theme.color};
   ${p => p.theme.mixins.h1};
+  margin-bottom: 0.5rem;
 `;
 const Overlay = styled.div`
   position: absolute;
@@ -32,13 +35,26 @@ const dates = [
   new Date('2018-08-01'),
 ];
 
-export default function App() {
+function getStateConfig(routeParams) {
+  const code = (
+    routeParams.stateCode || Object.keys(stateConfigs)[0]
+  ).toUpperCase();
+  return {
+    code,
+    name: stateConfigs[code].name,
+  };
+}
+
+export default function App({ match }) {
+  const stateConfig = getStateConfig(match.params);
   const [currentDate, setCurrentDate] = useState(dates[0]);
   return (
     <div>
-      <Map currentDate={currentDate} />
+      <Map stateCode={stateConfig.code} currentDate={currentDate} />
       <Overlay>
-        <Title>{`${currentDate.getFullYear()}`}</Title>
+        <Title>{`${
+          stateConfig.name
+        } Wildfires through ${currentDate.getFullYear()}`}</Title>
         {
           <div>
             {dates.map(date => (
@@ -55,3 +71,11 @@ export default function App() {
     </div>
   );
 }
+
+App.propTypes = {
+  match: PropTypes.shape({
+    params: PropTypes.shape({
+      stateCode: PropTypes.string,
+    }),
+  }),
+};
