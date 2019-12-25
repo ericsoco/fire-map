@@ -10,8 +10,8 @@ import { LOADED, LOADING } from '../utils/request-utils';
 
 import LoadingIcon from './loading-icon';
 
-// const basemap = 'mapbox://styles/mapbox/light-v8';
-const basemap = 'mapbox://styles/mapbox/outdoors-v11';
+const basemap = 'mapbox://styles/mapbox/light-v8';
+// const basemap = 'mapbox://styles/mapbox/outdoors-v11';
 
 function getInitialViewState(stateCode) {
   return {

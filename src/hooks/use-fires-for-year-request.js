@@ -1,9 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 
 import { loadFiresForYear } from '../state/fires-reducer';
-import { selectFiresForYearRequest } from '../state/fires-selectors';
+import {
+  selectAllFiresForYearRequests,
+  selectFiresForYearRequest,
+} from '../state/fires-selectors';
+import { LOADED } from '../utils/request-utils';
 
 // TODO: host these online rather than this parcel magic
 import fires2010 from 'url:~/static/data/fires/2010/2010.geojson';
@@ -16,6 +20,7 @@ import fires2016 from 'url:~/static/data/fires/2016/2016.geojson';
 import fires2017 from 'url:~/static/data/fires/2017/2017.geojson';
 import fires2018 from 'url:~/static/data/fires/2018/2018.geojson';
 
+const FIRST_YEAR = 2010;
 const FIRES_FOR_YEAR = {
   2010: fires2010,
   2011: fires2011,
@@ -28,19 +33,46 @@ const FIRES_FOR_YEAR = {
   2018: fires2018,
 };
 
-export default function useFiresForYearRequest(year) {
-  //
-  // TODO: change this to:
-  // - a) load the year merged fire file immediately
-  // - b) load all years before year in some smart way
-  //
+function getNextRequest(year, allRequests) {
+  let prevYear = year - 1;
+  let nextRequest = allRequests[prevYear];
+  while (
+    nextRequest &&
+    nextRequest.status === LOADED &&
+    prevYear >= FIRST_YEAR
+  ) {
+    prevYear--;
+    nextRequest = allRequests[prevYear];
+  }
+  return prevYear < FIRST_YEAR
+    ? null
+    : { request: nextRequest, year: prevYear };
+}
+
+/**
+ * Loads the requested year, and then serially loads years
+ * backwards through time until the first available year.
+ */
+export default function useFiresForYearRequest(selectedYear) {
+  const [queuedYear, setQueuedYear] = useState(null);
+  const year = queuedYear || selectedYear;
 
   const firesForYear = FIRES_FOR_YEAR[year];
   const dispatch = useDispatch();
+  const selectedYearRequest = useSelector(
+    selectFiresForYearRequest(selectedYear)
+  );
   const request = useSelector(selectFiresForYearRequest(year));
 
-  // Request only if not already in-flight
+  // If a previous year has not yet been loaded,
+  // queue it for load after this year
+  const nextRequest = getNextRequest(
+    year,
+    useSelector(selectAllFiresForYearRequests())
+  );
+
   useEffect(() => {
+    // Request only if not already in-flight
     if (!request) {
       dispatch(loadFiresForYear.start({ year }));
       axios(firesForYear)
@@ -50,8 +82,19 @@ export default function useFiresForYearRequest(year) {
         .catch(error => {
           dispatch(loadFiresForYear.failure({ year, error }));
         });
+    } else if (request && request.status === LOADED) {
+      // When this request completes:
+      if (nextRequest) {
+        // Start the next request if one is queued and not yet started
+        if (!nextRequest.request) setQueuedYear(nextRequest.year);
+      } else {
+        // Else, reset the queue
+        setQueuedYear(null);
+      }
     }
-  }, [dispatch, request]);
+  }, [dispatch, firesForYear, year, request, nextRequest]);
 
-  return request;
+  // Return only the request for the currently-selected year;
+  // let the rest resolve in the background.
+  return selectedYearRequest;
 }

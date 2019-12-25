@@ -27,3 +27,12 @@
   - [ ] debounce according to distance moved; longer lag for fast motion to make lazy-loading work better
   - [ ] consider coloring segments of slider by year depending if data loaded for that year (like buffering/progress bar)
   - [ ] label with notable fires (bigger than X acres, biggest per year, etc)
+- [ ] other layers
+  - [ ] developed area / urban areas (just via basemap?)
+  - [ ] rain (data layer, not likely a geo layer)
+
+### Current next steps:
+
+- [ ] Finish data loading strategy for all years / years before current
+  - [ ] Maybe go back and refactor scraper/merger accordingly
+- [ ] Do not display geojson features with datestamps > currentDate

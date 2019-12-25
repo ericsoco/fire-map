@@ -8,7 +8,7 @@ import Map from './map';
 const Title = styled.h1`
   color: ${p => p.theme.color};
   ${p => p.theme.mixins.h1};
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 `;
 const Overlay = styled.div`
   position: absolute;
