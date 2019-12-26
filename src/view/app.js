@@ -18,9 +18,10 @@ const Button = styled.button`
   background-color: rgba(255, 255, 255, 0.5);
   border-radius: 0.25rem;
   padding: 0.5rem;
-  margin-right: 0.5rem;
+  margin: 0 0.5rem 0.5rem 0;
   font-size: 1rem;
   cursor: pointer;
+  width: 100px;
 `;
 
 const dates = [
@@ -55,18 +56,25 @@ export default function App({ match }) {
         <Title>{`${
           stateConfig.name
         } Wildfires through ${currentDate.getFullYear()}`}</Title>
-        {
-          <div>
-            {dates.map(date => (
-              <Button
-                key={date.getFullYear()}
-                onClick={() => setCurrentDate(date)}
-              >
-                {date.getFullYear()}
-              </Button>
-            ))}
+        {new Array(5).fill(0).map((_, i) => (
+          <div key={`buttons-${i}`}>
+            {dates.map(date => {
+              const d = new Date(date.getTime());
+              d.setMonth(d.getMonth() + i);
+              const label = `${d.getFullYear()}.${d.toLocaleDateString(
+                'en-US',
+                {
+                  month: 'short',
+                }
+              )}`;
+              return (
+                <Button key={label} onClick={() => setCurrentDate(d)}>
+                  {label}
+                </Button>
+              );
+            })}
           </div>
-        }
+        ))}
       </Overlay>
     </div>
   );

@@ -13,6 +13,31 @@ import LoadingIcon from './loading-icon';
 const basemap = 'mapbox://styles/mapbox/light-v8';
 // const basemap = 'mapbox://styles/mapbox/outdoors-v11';
 
+function getFireName(perimeter) {
+  return (
+    perimeter.features[0].properties.FIRE_NAME ||
+    perimeter.features[0].properties.fireName
+  );
+}
+function getFireDate(perimeter) {
+  return (
+    perimeter.features[0].properties.DATE_ ||
+    perimeter.features[0].properties.perDatTime
+  );
+}
+function getFireSizeAcres(perimeter) {
+  return (
+    perimeter.features[0].properties.ACRES ||
+    perimeter.features[0].properties.GISACRES
+  );
+}
+function getFireSizeSqMiles(perimeter) {
+  return (
+    (perimeter.features[0].properties.ACRES ||
+      perimeter.features[0].properties.GISACRES) / 640
+  );
+}
+
 function getInitialViewState(stateCode) {
   return {
     ...stateConfigs[stateCode].mapInit,
@@ -36,6 +61,10 @@ export default function Map({ currentDate, stateCode }) {
           <GeoJsonLayer
             id="geojson-layer"
             data={firesForYearRequest.data}
+            visible={d => getFireDate(d) > currentDate}
+            updateTriggers={{
+              visible: [currentDate],
+            }}
             pickable={true}
             stroked={false}
             filled={true}

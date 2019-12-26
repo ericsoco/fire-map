@@ -33,6 +33,8 @@
 
 ### Current next steps:
 
-- [ ] Finish data loading strategy for all years / years before current
-  - [ ] Maybe go back and refactor scraper/merger accordingly
+- [x] Finish data loading strategy for all years / years before current
+- [ ] Maybe go back and refactor scraper/merger accordingly
 - [ ] Do not display geojson features with datestamps > currentDate
+      Use getFillColor/LineColor, or some other GeoJsonLayer, as a callback?
+      e.g. getFillColor={feature => feature.datestamp > foo...}
