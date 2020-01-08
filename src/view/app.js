@@ -25,15 +25,15 @@ const Button = styled.button`
 `;
 
 const dates = [
-  new Date('2010-08-01'),
-  new Date('2011-08-01'),
-  new Date('2012-08-01'),
-  new Date('2013-08-01'),
-  new Date('2014-08-01'),
-  new Date('2015-08-01'),
-  new Date('2016-08-01'),
-  new Date('2017-08-01'),
-  new Date('2018-08-01'),
+  new Date('2010-08-02'),
+  new Date('2011-08-02'),
+  new Date('2012-08-02'),
+  new Date('2013-08-02'),
+  new Date('2014-08-02'),
+  new Date('2015-08-02'),
+  new Date('2016-08-02'),
+  new Date('2017-08-02'),
+  new Date('2018-08-02'),
 ];
 
 function getStateConfig(routeParams) {
@@ -46,6 +46,12 @@ function getStateConfig(routeParams) {
   };
 }
 
+function formatDate(date) {
+  return `${date.getFullYear()}.${date.toLocaleDateString('en-US', {
+    month: 'short',
+  })}`;
+}
+
 export default function App({ match }) {
   const stateConfig = getStateConfig(match.params);
   const [currentDate, setCurrentDate] = useState(dates[0]);
@@ -53,20 +59,15 @@ export default function App({ match }) {
     <div>
       <Map stateCode={stateConfig.code} currentDate={currentDate} />
       <Overlay>
-        <Title>{`${
-          stateConfig.name
-        } Wildfires through ${currentDate.getFullYear()}`}</Title>
+        <Title>{`${stateConfig.name} Wildfires through ${formatDate(
+          currentDate
+        )}`}</Title>
         {new Array(5).fill(0).map((_, i) => (
           <div key={`buttons-${i}`}>
             {dates.map(date => {
               const d = new Date(date.getTime());
               d.setMonth(d.getMonth() + i);
-              const label = `${d.getFullYear()}.${d.toLocaleDateString(
-                'en-US',
-                {
-                  month: 'short',
-                }
-              )}`;
+              const label = formatDate(d);
               return (
                 <Button key={label} onClick={() => setCurrentDate(d)}>
                   {label}

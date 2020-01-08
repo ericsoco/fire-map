@@ -21,8 +21,12 @@
   - rather than load many files, just load one / one merged per year
     and set visibility of each feature based on its datestamp 🤦‍♀️
   - however, have to consider bundle size, really want to lazy load...
-  - [ ] yeah ok, so load each year as single merged file, on-demand
+  - [x] yeah ok, so load each year as single merged file, on-demand
   - [ ] even some of these are heavy, simplify geometry more
+  - [ ] ohhh wait, each fire folder has multiple perimeters per fire.
+        don't have that in merged fires :/
+        looks like we are going to have to load all geojsons for each fire,
+        tho we only need to load those near the currentDate...
 - [ ] slider
   - [ ] debounce according to distance moved; longer lag for fast motion to make lazy-loading work better
   - [ ] consider coloring segments of slider by year depending if data loaded for that year (like buffering/progress bar)
@@ -30,6 +34,8 @@
 - [ ] other layers
   - [ ] developed area / urban areas (just via basemap?)
   - [ ] rain (data layer, not likely a geo layer)
+- [ ] intro
+  - [ ] dedication to firefighters
 
 ### Current next steps:
 

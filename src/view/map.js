@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from '@deck.gl/layers';
 import { StaticMap } from 'react-map-gl';
+import { scalePow } from 'd3-scale';
 
 import { stateConfigs } from '../constants';
 import useFiresForYearRequest from '../hooks/use-fires-for-year-request';
@@ -13,29 +14,27 @@ import LoadingIcon from './loading-icon';
 const basemap = 'mapbox://styles/mapbox/light-v8';
 // const basemap = 'mapbox://styles/mapbox/outdoors-v11';
 
+const DAY = 24 * 60 * 60 * 1000;
+const alphaScale = scalePow()
+  .domain([0, 28 * DAY])
+  .range([200, 50])
+  .clamp(true)
+  .exponent(0.5);
+
 function getFireName(perimeter) {
-  return (
-    perimeter.features[0].properties.FIRE_NAME ||
-    perimeter.features[0].properties.fireName
-  );
+  return perimeter.properties.FIRE_NAME || perimeter.properties.fireName;
 }
 function getFireDate(perimeter) {
-  return (
-    perimeter.features[0].properties.DATE_ ||
-    perimeter.features[0].properties.perDatTime
+  // TODO: validate date strings
+  return new Date(
+    perimeter.properties.DATE_ || perimeter.properties.perDatTime
   );
 }
 function getFireSizeAcres(perimeter) {
-  return (
-    perimeter.features[0].properties.ACRES ||
-    perimeter.features[0].properties.GISACRES
-  );
+  return perimeter.properties.ACRES || perimeter.properties.GISACRES;
 }
 function getFireSizeSqMiles(perimeter) {
-  return (
-    (perimeter.features[0].properties.ACRES ||
-      perimeter.features[0].properties.GISACRES) / 640
-  );
+  return (perimeter.properties.ACRES || perimeter.properties.GISACRES) / 640;
 }
 
 function getInitialViewState(stateCode) {
@@ -61,9 +60,8 @@ export default function Map({ currentDate, stateCode }) {
           <GeoJsonLayer
             id="geojson-layer"
             data={firesForYearRequest.data}
-            visible={d => getFireDate(d) > currentDate}
             updateTriggers={{
-              visible: [currentDate],
+              getFillColor: [currentDate],
             }}
             pickable={true}
             stroked={false}
@@ -71,7 +69,11 @@ export default function Map({ currentDate, stateCode }) {
             extruded={false}
             lineWidthScale={20}
             lineWidthMinPixels={2}
-            getFillColor={[255, 80, 60, 150]}
+            getFillColor={d => {
+              const age = currentDate - getFireDate(d);
+              const alpha = age >= 0 ? alphaScale(age) : 0;
+              return [255, 80, 60, alpha];
+            }}
             getLineColor={[255, 80, 60, 255]}
           />
         )}
