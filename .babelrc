@@ -5,6 +5,14 @@
 	],
   "plugins": [
     ["@babel/plugin-proposal-pipeline-operator", { "proposal": "minimal" }],
-    "babel-plugin-styled-components"
+    "babel-plugin-styled-components",
+    [
+      "babel-plugin-import",
+      {
+        "libraryName": "@material-ui/core",
+        "libraryDirectory": "",
+        "camel2DashComponentName": false
+      }
+    ],
   ]
 }

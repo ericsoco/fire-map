@@ -13,6 +13,7 @@ const Title = styled.h1`
 `;
 const Overlay = styled.div`
   position: absolute;
+  width: 100%;
   padding: 1rem;
 `;
 
