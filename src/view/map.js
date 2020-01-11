@@ -47,8 +47,28 @@ function getInitialViewState(stateCode) {
 
 export default function Map({ currentDate, stateCode }) {
   const initialViewState = getInitialViewState(stateCode);
-  const firesForYearRequest = useFiresForYearRequest(currentDate.getFullYear());
-  // TODO: handle all status === ERROR
+  const { selectedYearRequest, previousYearRequests } = useFiresForYearRequest(
+    currentDate.getFullYear()
+  );
+
+  // Flatten all loaded GeoJSON features into a single FeatureCollection
+  // const data = previousYearRequests
+  //   .filter(isLoaded)
+  //   .map(request => request.data)
+  //   .concat(isLoaded(selectedYearRequest) ? [selectedYearRequest.data] : [])
+  //   .reduce((values, array) => [...values, ...array], []);
+  let features = previousYearRequests.filter(isLoaded);
+  features = features.map(request => request.data.features);
+  features = features.concat(
+    isLoaded(selectedYearRequest) ? [selectedYearRequest.data.features] : []
+  );
+  features = features.reduce((values, array) => [...values, ...array], []);
+  let featureCollection = {
+    type: 'FeatureCollection',
+    features,
+  };
+
+  // TODO: handle status === ERROR
   return (
     <div>
       <DeckGL initialViewState={initialViewState} controller={true}>
@@ -56,10 +76,10 @@ export default function Map({ currentDate, stateCode }) {
           mapboxApiAccessToken={process.env.MapboxAccessToken}
           mapStyle={basemap}
         />
-        {isLoaded(firesForYearRequest) && (
+        {isLoaded(selectedYearRequest) && (
           <GeoJsonLayer
             id="geojson-layer"
-            data={firesForYearRequest.data}
+            data={featureCollection}
             updateTriggers={{
               getFillColor: [currentDate],
             }}
@@ -78,7 +98,7 @@ export default function Map({ currentDate, stateCode }) {
           />
         )}
       </DeckGL>
-      {isLoading(firesForYearRequest) && <LoadingIcon withBackground />}
+      {isLoading(selectedYearRequest) && <LoadingIcon withBackground />}
     </div>
   );
 }

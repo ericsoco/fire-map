@@ -31,11 +31,20 @@
   - [ ] debounce according to distance moved; longer lag for fast motion to make lazy-loading work better
   - [ ] consider coloring segments of slider by year depending if data loaded for that year (like buffering/progress bar)
   - [ ] label with notable fires (bigger than X acres, biggest per year, etc)
+    - [ ] link labels to zoom map to fire (?)
+  - stuff from email (diverging bar chart for pre)
 - [ ] other layers
   - [ ] developed area / urban areas (just via basemap?)
   - [ ] rain (data layer, not likely a geo layer)
+        diverging bar chart, showing deviation from norm (sim concept to SST)
+  - [ ] nasa satellite hotspot detection
+        https://www.nytimes.com/interactive/2020/01/02/climate/australia-fires-map.html
 - [ ] intro
   - [ ] dedication to firefighters
+- [ ] other / ideas
+  - [ ] encode polygon height to:
+    - number of times an area has burned?
+    - days-length of fire?
 
 ### Current next steps:
 
@@ -44,3 +53,4 @@
 - [ ] Do not display geojson features with datestamps > currentDate
       Use getFillColor/LineColor, or some other GeoJsonLayer, as a callback?
       e.g. getFillColor={feature => feature.datestamp > foo...}
+  - [ ] Display all fires up to currentDate, not just those for current year

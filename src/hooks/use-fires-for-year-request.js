@@ -5,6 +5,7 @@ import axios from 'axios';
 import { loadFiresForYear } from '../state/fires-reducer';
 import {
   selectAllFiresForYearRequests,
+  selectFiresBeforeYearRequest,
   selectFiresForYearRequest,
 } from '../state/fires-selectors';
 import { isLoaded } from '../utils/request-utils';
@@ -47,7 +48,8 @@ function getNextRequest(year, allRequests) {
 
 /**
  * Loads the requested year, and then serially loads years
- * backwards through time until the first available year.
+ * backwards through time until the first available year;
+ * returns requests both for selected year and prior years as they load.
  */
 export default function useFiresForYearRequest(selectedYear) {
   const [queuedYear, setQueuedYear] = useState(null);
@@ -95,7 +97,12 @@ export default function useFiresForYearRequest(selectedYear) {
     }
   }, [dispatch, firesForYear, year, request, nextRequest]);
 
-  // Return only the request for the currently-selected year;
-  // let the rest resolve in the background.
-  return selectedYearRequest;
+  // Return the request for the currently-selected year;
+  // also return previous years as they resolve in the background.
+  return {
+    selectedYearRequest: selectedYearRequest,
+    previousYearRequests: useSelector(
+      selectFiresBeforeYearRequest(selectedYear)
+    ),
+  };
 }

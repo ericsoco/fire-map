@@ -124,6 +124,11 @@ function formatDate(date) {
   })}`;
 }
 
+// TODO: added debouncing to make dynamic loading smoother
+// and avoid unnecessary/duplicate requests. but...
+// i don't think there's actually a risk of that,
+// and more responsive UI calls for removing debounce.
+// Give that a shot and see how it feels.
 export default function Slider({ currentDate, setCurrentDate }) {
   const [sliderValue, setSliderValue] = useState(currentDate.getTime());
   const [debouncedSetDate] = useDebouncedCallback(value => {
