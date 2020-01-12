@@ -58,7 +58,7 @@
   - [ ] publish site to gh-pages / transmote
   - [ ] refine prototype
     - [ ] add playback controls
-    - [ ] rotate map to oblique view with north to left, south to right
+    - [x] rotate map to oblique view with north to left, south to right
     - [ ] load all perimeters, not just last, to show fires growing
   - [ ] write
     - [ ] inspiration / reason

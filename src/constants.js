@@ -6,9 +6,11 @@ export const stateConfigs = {
     name: 'California',
     key: 'California',
     mapInit: {
-      longitude: -121.25,
-      latitude: 37.6,
+      longitude: -118.5,
+      latitude: 36.8,
       zoom: 6,
+      pitch: 40,
+      bearing: 10,
     },
   },
 };

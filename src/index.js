@@ -5,6 +5,7 @@ import { createStore } from 'redux';
 import { devToolsEnhancer } from 'redux-devtools-extension';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
+import '~/node_modules/mapbox-gl/dist/mapbox-gl.css';
 
 import rootReducer, { ROOT_STATE } from './state/root-reducer';
 import { stateConfigs } from './constants';

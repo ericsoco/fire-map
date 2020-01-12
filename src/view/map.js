@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from '@deck.gl/layers';
@@ -12,7 +12,6 @@ import { isLoading, isLoaded } from '../utils/request-utils';
 import LoadingIcon from './loading-icon';
 
 const basemap = 'mapbox://styles/mapbox/light-v8';
-// const basemap = 'mapbox://styles/mapbox/outdoors-v11';
 
 const DAY = 24 * 60 * 60 * 1000;
 const alphaScale = scalePow()
@@ -38,25 +37,17 @@ function getFireSizeSqMiles(perimeter) {
 }
 
 function getInitialViewState(stateCode) {
-  return {
-    ...stateConfigs[stateCode].mapInit,
-    pitch: 0,
-    bearing: 0,
-  };
+  return stateConfigs[stateCode].mapInit;
 }
 
 export default function Map({ currentDate, stateCode }) {
   const initialViewState = getInitialViewState(stateCode);
+  const [viewState, setViewState] = useState(initialViewState);
   const { selectedYearRequest, previousYearRequests } = useFiresForYearRequest(
     currentDate.getFullYear()
   );
 
   // Flatten all loaded GeoJSON features into a single FeatureCollection
-  // const data = previousYearRequests
-  //   .filter(isLoaded)
-  //   .map(request => request.data)
-  //   .concat(isLoaded(selectedYearRequest) ? [selectedYearRequest.data] : [])
-  //   .reduce((values, array) => [...values, ...array], []);
   let features = previousYearRequests.filter(isLoaded);
   features = features.map(request => request.data.features);
   features = features.concat(
@@ -71,7 +62,12 @@ export default function Map({ currentDate, stateCode }) {
   // TODO: handle status === ERROR
   return (
     <div>
-      <DeckGL initialViewState={initialViewState} controller={true}>
+      <DeckGL
+        controller={true}
+        viewState={viewState}
+        onViewStateChange={({ viewState }) => setViewState(viewState)}
+        onViewportChange={v => console.log(v)}
+      >
         <StaticMap
           mapboxApiAccessToken={process.env.MapboxAccessToken}
           mapStyle={basemap}
@@ -83,7 +79,7 @@ export default function Map({ currentDate, stateCode }) {
             updateTriggers={{
               getFillColor: [currentDate],
             }}
-            pickable={true}
+            pickable={false}
             stroked={false}
             filled={true}
             extruded={false}
