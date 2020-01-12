@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 
-import { loadFiresForYear } from '../state/fires-reducer';
+import { loadAllFiresForYear } from '../state/fires-reducer';
 import {
   selectAllFiresForYearRequests,
   selectFiresBeforeYearRequest,
@@ -47,29 +47,27 @@ function getNextRequest(year, allRequests) {
 }
 
 /**
- * Loads the requested year, and then serially loads years
- * backwards through time until the first available year;
- * returns requests both for selected year and prior years as they load.
+ * Loads all perimeters of each fire in the requested year.
  */
-export default function useFiresForYearRequest(selectedYear) {
-  const [queuedYear, setQueuedYear] = useState(null);
-
-  // Process the selected year request if it has not yet been started,
-  // else process the queued year request
+export default function useAllFiresForYearRequest(selectedYear) {
+  // Process the selected year request if it has not yet been started
   const selectedYearRequest = useSelector(
-    selectFiresForYearRequest(selectedYear)
+    selectAllFiresForYearRequest(selectedYear)
   );
-  const queuedYearRequest = useSelector(selectFiresForYearRequest(queuedYear));
-  const readyForNext = isLoaded(selectedYearRequest) && queuedYear;
-  const request = readyForNext ? queuedYearRequest : selectedYearRequest;
-  const year = readyForNext ? queuedYear : selectedYear;
 
-  // If a previous year has not yet been loaded,
-  // queue it for load after this year
-  const nextRequest = getNextRequest(
-    year,
-    useSelector(selectAllFiresForYearRequests())
-  );
+  //
+  // TODO NEXT:
+  // have to figure out how to pull in all perimeters.
+  // this may end up an extremely heavy data load;
+  // definitely will need to reprocess data at higher compression
+  // (tho may leave complete perims less-compressed...TBD)
+  // may need to generate manifest as part of scraping process
+  // that runtime here can pull, since browser can't access filesystem.
+  // then, replace `firesForYear` with list of perimeters to load,
+  // load them all in parallel, and dispatch success when all requests
+  // have resolved (allow some failures).
+  // finally, call this hook from map.js and render what it returns.
+  //
 
   const firesForYear = FIRES_FOR_YEAR[year];
   const dispatch = useDispatch();
@@ -77,13 +75,13 @@ export default function useFiresForYearRequest(selectedYear) {
   useEffect(() => {
     // Request only if not already in-flight
     if (!request) {
-      dispatch(loadFiresForYear.start({ year }));
+      dispatch(loadAllFiresForYear.start({ year }));
       axios(firesForYear)
         .then(response => {
-          dispatch(loadFiresForYear.success({ year, data: response.data }));
+          dispatch(loadAllFiresForYear.success({ year, data: response.data }));
         })
         .catch(error => {
-          dispatch(loadFiresForYear.failure({ year, error }));
+          dispatch(loadAllFiresForYear.failure({ year, error }));
         });
     } else if (isLoaded(request)) {
       // When this request completes:
@@ -97,12 +95,5 @@ export default function useFiresForYearRequest(selectedYear) {
     }
   }, [dispatch, firesForYear, year, request, nextRequest]);
 
-  // Return the request for the currently-selected year;
-  // also return previous years as they resolve in the background.
-  return {
-    selectedYearRequest: selectedYearRequest,
-    previousYearRequests: useSelector(
-      selectFiresBeforeYearRequest(selectedYear)
-    ),
-  };
+  return selectedYearRequest;
 }

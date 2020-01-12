@@ -37,6 +37,7 @@
     "use-debounce": "^3.3.0"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-optional-chaining": "^7.8.0",
     "@babel/plugin-proposal-pipeline-operator": "^7.7.7",
     "@babel/preset-env": "^7.7.6",
     "@babel/preset-react": "^7.7.4",

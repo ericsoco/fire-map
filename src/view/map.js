@@ -6,7 +6,7 @@ import { StaticMap } from 'react-map-gl';
 import { scalePow } from 'd3-scale';
 
 import { stateConfigs } from '../constants';
-import useFiresForYearRequest from '../hooks/use-fires-for-year-request';
+import useCompleteFiresForYearRequest from '../hooks/use-complete-fires-for-year-request';
 import { isLoading, isLoaded } from '../utils/request-utils';
 
 import LoadingIcon from './loading-icon';
@@ -43,9 +43,10 @@ function getInitialViewState(stateCode) {
 export default function Map({ currentDate, stateCode }) {
   const initialViewState = getInitialViewState(stateCode);
   const [viewState, setViewState] = useState(initialViewState);
-  const { selectedYearRequest, previousYearRequests } = useFiresForYearRequest(
-    currentDate.getFullYear()
-  );
+  const {
+    selectedYearRequest,
+    previousYearRequests,
+  } = useCompleteFiresForYearRequest(currentDate.getFullYear());
 
   // Flatten all loaded GeoJSON features into a single FeatureCollection
   let features = previousYearRequests.filter(isLoaded);

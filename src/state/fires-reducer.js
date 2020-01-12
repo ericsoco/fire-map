@@ -12,22 +12,62 @@ export const INITIAL_STATE = {
   years: {},
 };
 
-export const loadFiresForYear = createRPCActions('loadFiresForYear');
-const loadFiresForYearReducer =
-  createRPCReducer('loadFiresForYear', {
+export const loadAllFiresForYear = createRPCActions('loadAllFiresForYear');
+const loadAllFiresForYearReducer =
+  createRPCReducer('loadAllFiresForYear', {
     start: (state, { payload: { year } }) => ({
       ...state,
-      [year]: loadingRequest(year),
+      [year]: {
+        ...state[year],
+        all: loadingRequest(year),
+      },
     }),
     success: (state, { payload: { year, data } }) => ({
       ...state,
-      [year]: loadedRequest(year, data),
+      [year]: {
+        ...state[year],
+        all: loadedRequest(year, data),
+      },
     }),
     failure: (state, { payload: { year, error } }) => ({
       ...state,
-      [year]: errorRequest(year, error),
+      [year]: {
+        ...state[year],
+        all: errorRequest(year, error),
+      },
     }),
   }) |> reduceOver('years');
 
-export default reduceReducers(null, loadFiresForYearReducer)
-  |> reduceOver('fires');
+export const loadCompleteFiresForYear = createRPCActions(
+  'loadCompleteFiresForYear'
+);
+const loadCompleteFiresForYearReducer =
+  createRPCReducer('loadCompleteFiresForYear', {
+    start: (state, { payload: { year } }) => ({
+      ...state,
+      [year]: {
+        ...state[year],
+        complete: loadingRequest(year),
+      },
+    }),
+    success: (state, { payload: { year, data } }) => ({
+      ...state,
+      [year]: {
+        ...state[year],
+        complete: loadedRequest(year, data),
+      },
+    }),
+    failure: (state, { payload: { year, error } }) => ({
+      ...state,
+      [year]: {
+        ...state[year],
+        complete: errorRequest(year, error),
+      },
+    }),
+  }) |> reduceOver('years');
+
+export default reduceReducers(
+  null,
+  loadAllFiresForYearReducer,
+  loadCompleteFiresForYearReducer
+) |> reduceOver('fires');

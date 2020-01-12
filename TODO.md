@@ -45,6 +45,7 @@
   - [ ] encode polygon height to:
     - number of times an area has burned?
     - days-length of fire?
+  - [ ] is 2019 data available yet?
 
 ### Current next steps:
 
