@@ -16,8 +16,8 @@ const basemap = 'mapbox://styles/mapbox/light-v8';
 
 const DAY = 24 * 60 * 60 * 1000;
 const alphaScale = scalePow()
-  .domain([0, 8 * 7 * DAY])
-  .range([200, 50])
+  .domain([0, 16 * 7 * DAY])
+  .range([240, 100])
   .clamp(true)
   .exponent(0.5);
 

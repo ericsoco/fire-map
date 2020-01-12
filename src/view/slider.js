@@ -134,7 +134,7 @@ export default function Slider({ currentDate, setCurrentDate }) {
   const [debouncedSetDate] = useDebouncedCallback(value => {
     // console.log('debounced setCurrentDate to value:', value);
     setCurrentDate(value);
-  }, 100);
+  }, 1);
   const onChange = (event, value) => {
     // Immediately update slider thumb position
     setSliderValue(value);

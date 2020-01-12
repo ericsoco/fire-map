@@ -50,7 +50,26 @@
 
 - [x] Finish data loading strategy for all years / years before current
 - [ ] Maybe go back and refactor scraper/merger accordingly
-- [ ] Do not display geojson features with datestamps > currentDate
+- [x] Do not display geojson features with datestamps > currentDate
       Use getFillColor/LineColor, or some other GeoJsonLayer, as a callback?
       e.g. getFillColor={feature => feature.datestamp > foo...}
-  - [ ] Display all fires up to currentDate, not just those for current year
+  - [x] Display all fires up to currentDate, not just those for current year
+- [ ] RFP
+  - [ ] publish site to gh-pages / transmote
+  - [ ] refine prototype
+    - [ ] add playback controls
+    - [ ] rotate map to oblique view with north to left, south to right
+    - [ ] load all perimeters, not just last, to show fires growing
+  - [ ] write
+    - [ ] inspiration / reason
+    - [ ] narrative
+    - [ ] current prototype
+    - [ ] aspirations
+      - [ ] features:
+        - other datasets
+        - zoom to fires
+        - ...?
+      - [ ] technical:
+        - improve loading
+        - all open-source, including data scraper
+  - [ ] send to cfp@parametric.press, Subject: [Pitch: California Wildfires Map]

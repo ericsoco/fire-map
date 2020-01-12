@@ -30,6 +30,7 @@ function getStateConfig(routeParams) {
 function formatDate(date) {
   return `${date.getFullYear()}.${date.toLocaleDateString('en-US', {
     month: 'short',
+    day: '2-digit',
   })}`;
 }
 
