@@ -208,6 +208,7 @@ function scrapeFirePage(params, response, onPageComplete) {
             console.log(chalk.green(`↳ Downloaded: ${filename}`));
           }
 
+          // Once all shapefiles have been downloaded, process them
           fileCount.done++;
           if (fileCount.done >= fileCount.total) {
             try {
@@ -288,7 +289,7 @@ function processPerimeter(folder, perimeterName) {
       err => {
         if (err) throw err;
         console.info(
-          `🗜 Mapshaped ${filePrefix} to GeoJSON and simplified by ${simplifyPercent}%`
+          `🗜 Mapshaped ${filePrefix} to GeoJSON and simplified to ${simplifyPercent}%`
         );
       }
     );
@@ -301,9 +302,10 @@ function processPerimeter(folder, perimeterName) {
 function calculateSimplifyPercent(shapefile) {
   const simplifyScale = scale
     .scalePow()
-    .domain([10, 500])
-    .range([30, 3])
-    .exponent(0.25);
+    .domain([5, 350])
+    .range([20, 2])
+    .exponent(0.15)
+    .clamp(true);
   const sizeKB = fs.statSync(shapefile).size / 1024;
   const percent = simplifyScale(sizeKB);
   return Math.round(percent * 100) / 100;

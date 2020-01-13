@@ -23,7 +23,12 @@
   - however, have to consider bundle size, really want to lazy load...
   - [x] yeah ok, so load each year as single merged file, on-demand
   - [ ] even some of these are heavy, simplify geometry more
-  - [ ] ohhh wait, each fire folder has multiple perimeters per fire.
+        note: increased simplification once,
+        from: .domain([10, 500]).range([30, 3]).exponent(0.25)
+        to: .domain([5, 350]).range([20, 2]).exponent(0.15)
+        but still end up with very heavy (10+MB) merged files.
+        may need to consider other strategies...
+  - [x] ohhh wait, each fire folder has multiple perimeters per fire.
         don't have that in merged fires :/
         looks like we are going to have to load all geojsons for each fire,
         tho we only need to load those near the currentDate...
@@ -41,6 +46,9 @@
         https://www.nytimes.com/interactive/2020/01/02/climate/australia-fires-map.html
 - [ ] intro
   - [ ] dedication to firefighters
+- [ ] map
+  - [ ] Animate viewport from flat/top-down view to oblique view;
+        oblique view (w/ pitch + bearing) is too foreign a perspective to start with
 - [ ] other / ideas
   - [ ] encode polygon height to:
     - number of times an area has burned?
@@ -50,7 +58,12 @@
 ### Current next steps:
 
 - [x] Finish data loading strategy for all years / years before current
-- [ ] Maybe go back and refactor scraper/merger accordingly
+- [x] Maybe go back and refactor scraper/merger accordingly
+  - [x] compress all perimeters for each fire into a single FeatureCollection
+        with each perimeter as a separate Feature
+  - [x] consider compressing all perimeters for year into a single
+        FeatureCollection in order to load only one file / year
+  - [x] simplify geometry even more...
 - [x] Do not display geojson features with datestamps > currentDate
       Use getFillColor/LineColor, or some other GeoJsonLayer, as a callback?
       e.g. getFillColor={feature => feature.datestamp > foo...}
@@ -72,5 +85,6 @@
         - ...?
       - [ ] technical:
         - improve loading
+        - reduce bundle size
         - all open-source, including data scraper
   - [ ] send to cfp@parametric.press, Subject: [Pitch: California Wildfires Map]

@@ -16,7 +16,6 @@ const fs = require('fs');
 const geojsonMerge = require('@mapbox/geojson-merge');
 
 const DEFAULT_SRC = 'static/data/fires';
-const OUTPUT_FILENAME = '_merged_.geojson';
 const GEOJSON_FILE = /(\.geojson)$/;
 
 main();
@@ -89,6 +88,45 @@ function mergeFiresForStateYear(params, cb) {
     .readdirSync(path)
     .filter(file => fs.statSync(`${path}/${file}`).isDirectory());
 
+  let mergeCompletion = { All: false, Final: false };
+  const onMergeComplete = jobName => err => {
+    mergeCompletion[jobName] = true;
+    if (err) {
+      logError(err);
+    } else {
+      console.log(
+        chalk.bold(
+          chalk.cyan(
+            `✅ ${jobName} fire perimeters merged for ${state}/${year}.`
+          )
+        )
+      );
+    }
+    if (Object.values(mergeCompletion).every(Boolean)) {
+      cb();
+    }
+  };
+
+  const allPerimeters = fireFolders.reduce((perims, folder) => {
+    const geoJSONFiles = fs
+      .readdirSync(`${path}/${folder}`)
+      .filter(file => GEOJSON_FILE.test(file));
+    return geoJSONFiles.length > 0
+      ? {
+          ...perims,
+          [folder]: geoJSONFiles.map(f => `${path}/${folder}/${f}`),
+        }
+      : perims;
+  }, {});
+
+  // Merge all perimeters into single file and write to year folder.
+  // E.g. static/data/2010/allPerimeters_California_2010.geojson
+  mergePerimeters(
+    allPerimeters,
+    `${src}/${year}/allPerimeters_${state}_${year}.geojson`,
+    onMergeComplete('All')
+  );
+
   // Get the last perimeter for each fire and map to the fire name
   const finalPerimeters = fireFolders.reduce((perims, folder) => {
     const geoJSONFiles = fs
@@ -97,32 +135,36 @@ function mergeFiresForStateYear(params, cb) {
     return geoJSONFiles.length > 0
       ? {
           ...perims,
-          [folder]: `${path}/${folder}/${geoJSONFiles.slice(-1)[0]}`,
+          [folder]: [`${path}/${folder}/${geoJSONFiles.slice(-1)[0]}`],
         }
       : perims;
   }, {});
 
-  mergePerimeters(finalPerimeters, path, err => {
-    if (err) {
-      logError(err);
-    } else {
-      console.log(
-        chalk.bold(
-          chalk.cyan(`✅ All fires merged for ${params.state}/${params.year}`)
-        )
-      );
-    }
-    cb();
-  });
+  // Merge final perimeters into single file and write to year folder.
+  // E.g. static/data/2010/finalPerimeters_California_2010.geojson
+  mergePerimeters(
+    finalPerimeters,
+    `${src}/${year}/finalPerimeters_${state}_${year}.geojson`,
+    onMergeComplete('Final')
+  );
 }
 
-// Merge fire perimeters into a single `_merged_.geojson` at specified path
+/**
+ * Merge fire perimeters into a single `_merged_.geojson` at specified path
+ * @param {[string]: string[]} perimeters - Map of fire name to Array of GeoJSON filepaths
+ * @param {string} path - Path to which to write merged GeoJSON file
+ * @param {Function} cb - Node-style callback, called on error/complete
+ */
 function mergePerimeters(perimeters, path, cb) {
   try {
     const mergedStream = geojsonMerge.mergeFeatureCollectionStream(
-      Object.values(perimeters)
+      // Flatten all perimeters in each entry
+      Object.values(perimeters).reduce(
+        (allPaths, paths) => [...allPaths, ...paths],
+        []
+      )
     );
-    const file = fs.createWriteStream(`${path}/${OUTPUT_FILENAME}`);
+    const file = fs.createWriteStream(`${path}`);
     file.on('finish', () => file.close(cb));
     mergedStream.pipe(file);
   } catch (err) {
