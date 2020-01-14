@@ -20,6 +20,30 @@ const StyledContainer = styled.div`
   }
 `;
 
+const Tooltip = styled.div`
+  position: absolute;
+  z-index: 1;
+  width: 16rem;
+  height: 6rem;
+  left: ${p => p.left}px;
+  top: ${p => p.top}px;
+  padding: 1rem;
+  background-color: #ffffff;
+  color: #000000;
+  pointer-events: none;
+`;
+
+const FireName = styled.h2`
+  font-size: 1.5rem;
+`;
+const FireDate = styled.h3`
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+`;
+const FireSize = styled.div`
+  font-size: 1rem;
+`;
+
 const performAdditiveBlending = false;
 // https://docs.mapbox.com/api/maps/#styles
 const basemap = performAdditiveBlending
@@ -34,7 +58,13 @@ const alphaScale = scalePow()
   .exponent(0.5);
 
 function getFireName(perimeter) {
-  return perimeter.properties.FIRE_NAME || perimeter.properties.fireName;
+  const name = perimeter.properties.FIRE_NAME || perimeter.properties.fireName;
+  return name
+    .split(' ')
+    .map(
+      word => `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`
+    )
+    .join(' ');
 }
 function getFireDate(perimeter) {
   // TODO: validate date strings
@@ -42,11 +72,26 @@ function getFireDate(perimeter) {
     perimeter.properties.DATE_ || perimeter.properties.perDatTime
   );
 }
-function getFireSizeAcres(perimeter) {
-  return perimeter.properties.ACRES || perimeter.properties.GISACRES;
+function getFireDateRange(perimeter, data) {
+  // TODO: implement
 }
-function getFireSizeSqMiles(perimeter) {
-  return (perimeter.properties.ACRES || perimeter.properties.GISACRES) / 640;
+function formatFireDate(date) {
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: '2-digit',
+    year: 'numeric',
+  });
+}
+function getFireSizeAcres(perimeter, numDigits = 20) {
+  return parseFloat(
+    perimeter.properties.ACRES || perimeter.properties.GISACRES
+  ).toFixed(numDigits);
+}
+function getFireSizeSqMiles(perimeter, numDigits = 20) {
+  return (
+    parseFloat(perimeter.properties.ACRES || perimeter.properties.GISACRES) /
+    640
+  ).toFixed(numDigits);
 }
 
 function getInitialViewState(stateCode) {
@@ -67,9 +112,26 @@ function flattenData(firesRequests) {
   };
 }
 
+// TODO: move tooltip and associated utils to separate module
+function renderTooltip(hoverInfo) {
+  if (!hoverInfo || !hoverInfo.picked || !hoverInfo.object) {
+    return null;
+  }
+  const { object, x, y } = hoverInfo;
+  const date = getFireDate(object);
+  return (
+    <Tooltip left={x} top={y}>
+      <FireName>{getFireName(object)}</FireName>
+      {date && <FireDate>{formatFireDate(date)}</FireDate>}
+      <FireSize>{`${getFireSizeSqMiles(object, 2)} sq. miles`}</FireSize>
+    </Tooltip>
+  );
+}
+
 export default function Map({ currentDate, stateCode }) {
   const initialViewState = getInitialViewState(stateCode);
   const [viewState, setViewState] = useState(initialViewState);
+  const [hoverInfo, setHoverInfo] = useState(null);
   const allFiresForYearRequest = useAllFiresForYearRequest(
     currentDate.getFullYear()
   );
@@ -100,7 +162,6 @@ export default function Map({ currentDate, stateCode }) {
             updateTriggers={{
               getFillColor: [currentDate],
             }}
-            pickable={false}
             stroked={false}
             filled={true}
             extruded={false}
@@ -125,8 +186,11 @@ export default function Map({ currentDate, stateCode }) {
                   }
                 : {}),
             }}
+            pickable={true}
+            onHover={setHoverInfo}
           />
         )}
+        {renderTooltip(hoverInfo)}
       </DeckGL>
       {isLoading(selectedYearRequest) && <LoadingIcon withBackground />}
     </StyledContainer>

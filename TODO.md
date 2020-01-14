@@ -37,6 +37,8 @@
         looks like we are going to have to load all geojsons for each fire,
         tho we only need to load those near the currentDate...
 - [ ] fires layer
+  - [ ] perf: handle incremental loads with one layer / data payload
+        https://deck.gl/#/documentation/developer-guide/performance-optimization?section=use-updatetriggers#handle-incremental-data-loading
   - [ ] only render most recent perimeter for each fire
   - [ ] handle requests for years beyond the last gracefully:
         don't blank out whole fire layer because of null request
@@ -80,12 +82,12 @@
 - [ ] RFP
   - [ ] publish site to gh-pages / transmote
   - [ ] refine prototype
+    - [ ] enable basic picking + tooltips
     - [ ] add playback controls
           implement in a way that a segment can be cued + played to tell stories,
           e.g. encircling of Ojai by Thomas Fire - start time - stop time - playback speed - metadata (title, desc, etc)
     - [x] rotate map to oblique view with north to left, south to right
     - [x] load all perimeters, not just last, to show fires growing
-    - [ ] enable basic picking + tooltips
   - [ ] write
     - [ ] inspiration / reason
     - [ ] narrative
