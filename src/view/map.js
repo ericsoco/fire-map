@@ -6,6 +6,7 @@ import { StaticMap } from 'react-map-gl';
 import { scalePow } from 'd3-scale';
 
 import { stateConfigs } from '../constants';
+import useAllFiresForYearRequest from '../hooks/use-all-fires-for-year-request';
 import useCompleteFiresForYearRequest from '../hooks/use-complete-fires-for-year-request';
 import { isLoading, isLoaded } from '../utils/request-utils';
 
@@ -40,25 +41,32 @@ function getInitialViewState(stateCode) {
   return stateConfigs[stateCode].mapInit;
 }
 
+/**
+ * Flatten multiple GeoJSON requests into a single FeatureCollection
+ */
+function flattenData(firesRequests) {
+  const features = firesRequests
+    .filter(isLoaded)
+    .map(request => request.data.features)
+    .reduce((values, array) => [...values, ...array], []);
+  return {
+    type: 'FeatureCollection',
+    features,
+  };
+}
+
 export default function Map({ currentDate, stateCode }) {
   const initialViewState = getInitialViewState(stateCode);
   const [viewState, setViewState] = useState(initialViewState);
+  const allFiresForYearRequest = useAllFiresForYearRequest(
+    currentDate.getFullYear()
+  );
   const {
     selectedYearRequest,
     previousYearRequests,
   } = useCompleteFiresForYearRequest(currentDate.getFullYear());
 
-  // Flatten all loaded GeoJSON features into a single FeatureCollection
-  let features = previousYearRequests.filter(isLoaded);
-  features = features.map(request => request.data.features);
-  features = features.concat(
-    isLoaded(selectedYearRequest) ? [selectedYearRequest.data.features] : []
-  );
-  features = features.reduce((values, array) => [...values, ...array], []);
-  let featureCollection = {
-    type: 'FeatureCollection',
-    features,
-  };
+  const data = flattenData([...previousYearRequests, allFiresForYearRequest]);
 
   // TODO: handle status === ERROR
   return (
@@ -76,7 +84,7 @@ export default function Map({ currentDate, stateCode }) {
         {isLoaded(selectedYearRequest) && (
           <GeoJsonLayer
             id="geojson-layer"
-            data={featureCollection}
+            data={data}
             updateTriggers={{
               getFillColor: [currentDate],
             }}

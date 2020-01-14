@@ -10,16 +10,16 @@ import {
 } from '../state/fires-selectors';
 import { isLoaded } from '../utils/request-utils';
 
-// TODO: host these online rather than this parcel magic
-import fires2010 from 'url:~/static/data/fires/2010/2010.geojson';
-import fires2011 from 'url:~/static/data/fires/2011/2011.geojson';
-import fires2012 from 'url:~/static/data/fires/2012/2012.geojson';
-import fires2013 from 'url:~/static/data/fires/2013/2013.geojson';
-import fires2014 from 'url:~/static/data/fires/2014/2014.geojson';
-import fires2015 from 'url:~/static/data/fires/2015/2015.geojson';
-import fires2016 from 'url:~/static/data/fires/2016/2016.geojson';
-import fires2017 from 'url:~/static/data/fires/2017/2017.geojson';
-import fires2018 from 'url:~/static/data/fires/2018/2018.geojson';
+// TODO: host in dist and load at runtime rather than this parcel magic
+import fires2010 from 'url:~/static/data/fires/2010/finalPerimeters_California_2010.geojson';
+import fires2011 from 'url:~/static/data/fires/2011/finalPerimeters_California_2011.geojson';
+import fires2012 from 'url:~/static/data/fires/2012/finalPerimeters_California_2012.geojson';
+import fires2013 from 'url:~/static/data/fires/2013/finalPerimeters_California_2013.geojson';
+import fires2014 from 'url:~/static/data/fires/2014/finalPerimeters_California_2014.geojson';
+import fires2015 from 'url:~/static/data/fires/2015/finalPerimeters_California_2015.geojson';
+import fires2016 from 'url:~/static/data/fires/2016/finalPerimeters_California_2016.geojson';
+import fires2017 from 'url:~/static/data/fires/2017/finalPerimeters_California_2017.geojson';
+import fires2018 from 'url:~/static/data/fires/2018/finalPerimeters_California_2018.geojson';
 
 const FIRST_YEAR = 2010;
 const FIRES_FOR_YEAR = {

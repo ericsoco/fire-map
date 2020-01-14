@@ -2,8 +2,12 @@
 
 ## Data
 
+- [ ] invalid data
+  - [ ] 2012 has bad value(s) -- ??
+  - [ ] Brannan (2014) has `null` geometry
+  - [ ] Gasquet Complex (2015) has `null` geometry
+  - [ ] Cabin (2017) has `null` geometry
 - [ ] OOB data:
-  - [ ] 2012 has bad value(s)
   - [ ] Halstead (2012)
   - [ ] Hay Canyon (2015)
   - [ ] China Cap (2014)
@@ -33,7 +37,7 @@
         looks like we are going to have to load all geojsons for each fire,
         tho we only need to load those near the currentDate...
 - [ ] slider
-  - [ ] debounce according to distance moved; longer lag for fast motion to make lazy-loading work better
+  - [x] debounce according to distance moved; longer lag for fast motion to make lazy-loading work better
   - [ ] consider coloring segments of slider by year depending if data loaded for that year (like buffering/progress bar)
   - [ ] label with notable fires (bigger than X acres, biggest per year, etc)
     - [ ] link labels to zoom map to fire (?)
@@ -73,7 +77,7 @@
   - [ ] refine prototype
     - [ ] add playback controls
     - [x] rotate map to oblique view with north to left, south to right
-    - [ ] load all perimeters, not just last, to show fires growing
+    - [x] load all perimeters, not just last, to show fires growing
   - [ ] write
     - [ ] inspiration / reason
     - [ ] narrative
