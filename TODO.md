@@ -36,6 +36,10 @@
         don't have that in merged fires :/
         looks like we are going to have to load all geojsons for each fire,
         tho we only need to load those near the currentDate...
+- [ ] fires layer
+  - [ ] only render most recent perimeter for each fire
+  - [ ] handle requests for years beyond the last gracefully:
+        don't blank out whole fire layer because of null request
 - [ ] slider
   - [x] debounce according to distance moved; longer lag for fast motion to make lazy-loading work better
   - [ ] consider coloring segments of slider by year depending if data loaded for that year (like buffering/progress bar)
@@ -57,7 +61,8 @@
   - [ ] encode polygon height to:
     - number of times an area has burned?
     - days-length of fire?
-  - [ ] is 2019 data available yet?
+  - [ ] additive blending to highlight overlapping perimeters?
+  - [x] is 2019 data available yet?
 
 ### Current next steps:
 
@@ -76,8 +81,11 @@
   - [ ] publish site to gh-pages / transmote
   - [ ] refine prototype
     - [ ] add playback controls
+          implement in a way that a segment can be cued + played to tell stories,
+          e.g. encircling of Ojai by Thomas Fire - start time - stop time - playback speed - metadata (title, desc, etc)
     - [x] rotate map to oblique view with north to left, south to right
     - [x] load all perimeters, not just last, to show fires growing
+    - [ ] enable basic picking + tooltips
   - [ ] write
     - [ ] inspiration / reason
     - [ ] narrative
@@ -85,10 +93,16 @@
     - [ ] aspirations
       - [ ] features:
         - other datasets
-        - zoom to fires
+        - zoom to fires (create GIFs for RFP)
+          - [ ] ojai/thomas
+          - [ ] paradise/??
+          - [ ] sonoma/?? - 2017. 2019
         - ...?
       - [ ] technical:
         - improve loading
         - reduce bundle size
         - all open-source, including data scraper
+        - deployment target: desktop-first, but could possibly be adapted to mobile
+          - load less data / omit smaller fires
+          - focus more on highlighting individual fires and less on open-ended map exploration
   - [ ] send to cfp@parametric.press, Subject: [Pitch: California Wildfires Map]

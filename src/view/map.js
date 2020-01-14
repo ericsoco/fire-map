@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from '@deck.gl/layers';
+import GL from '@luma.gl/constants';
 import { StaticMap } from 'react-map-gl';
 import { scalePow } from 'd3-scale';
+import styled from 'styled-components';
 
 import { stateConfigs } from '../constants';
 import useAllFiresForYearRequest from '../hooks/use-all-fires-for-year-request';
@@ -12,7 +14,17 @@ import { isLoading, isLoaded } from '../utils/request-utils';
 
 import LoadingIcon from './loading-icon';
 
-const basemap = 'mapbox://styles/mapbox/light-v8';
+const StyledContainer = styled.div`
+  canvas {
+    mix-blend-mode: multiply;
+  }
+`;
+
+const performAdditiveBlending = false;
+// https://docs.mapbox.com/api/maps/#styles
+const basemap = performAdditiveBlending
+  ? 'mapbox://styles/mapbox/dark-v10'
+  : 'mapbox://styles/mapbox/light-v10';
 
 const DAY = 24 * 60 * 60 * 1000;
 const alphaScale = scalePow()
@@ -70,7 +82,7 @@ export default function Map({ currentDate, stateCode }) {
 
   // TODO: handle status === ERROR
   return (
-    <div>
+    <StyledContainer>
       <DeckGL
         controller={true}
         viewState={viewState}
@@ -83,7 +95,7 @@ export default function Map({ currentDate, stateCode }) {
         />
         {isLoaded(selectedYearRequest) && (
           <GeoJsonLayer
-            id="geojson-layer"
+            id="fires"
             data={data}
             updateTriggers={{
               getFillColor: [currentDate],
@@ -100,11 +112,24 @@ export default function Map({ currentDate, stateCode }) {
               return [255, 80, 60, alpha];
             }}
             getLineColor={[255, 80, 60, 255]}
+            parameters={{
+              // prevent z-fighting flicker
+              [GL.DEPTH_TEST]: false,
+              ...(performAdditiveBlending
+                ? {
+                    // additive blending
+                    [GL.BLEND]: true,
+                    [GL.BLEND_SRC_RGB]: GL.ONE,
+                    [GL.BLEND_DST_RGB]: GL.ONE,
+                    [GL.BLEND_EQUATION]: GL.FUNC_ADD,
+                  }
+                : {}),
+            }}
           />
         )}
       </DeckGL>
       {isLoading(selectedYearRequest) && <LoadingIcon withBackground />}
-    </div>
+    </StyledContainer>
   );
 }
 

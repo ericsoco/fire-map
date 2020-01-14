@@ -20,6 +20,7 @@ import fires2015 from 'url:~/static/data/fires/2015/finalPerimeters_California_2
 import fires2016 from 'url:~/static/data/fires/2016/finalPerimeters_California_2016.geojson';
 import fires2017 from 'url:~/static/data/fires/2017/finalPerimeters_California_2017.geojson';
 import fires2018 from 'url:~/static/data/fires/2018/finalPerimeters_California_2018.geojson';
+import fires2019 from 'url:~/static/data/fires/2019/finalPerimeters_California_2019.geojson';
 
 const FIRST_YEAR = 2010;
 const FIRES_FOR_YEAR = {
@@ -32,6 +33,7 @@ const FIRES_FOR_YEAR = {
   2016: fires2016,
   2017: fires2017,
   2018: fires2018,
+  2019: fires2019,
 };
 
 function getNextRequest(year, allRequests) {

@@ -25,6 +25,7 @@ export const dates = [
   new Date('2016-08-02'),
   new Date('2017-08-02'),
   new Date('2018-08-02'),
+  new Date('2019-08-02'),
 ];
 
 // TODO: resolve timezone issue requiring dates to be -02 instead of -01
@@ -103,6 +104,14 @@ const ticks = [
   new Date('2018-11-02'),
   new Date('2018-12-02'),
   new Date('2019-01-02'),
+  new Date('2019-03-02'),
+  new Date('2019-07-02'),
+  new Date('2019-08-02'),
+  new Date('2019-09-02'),
+  new Date('2019-10-02'),
+  new Date('2019-11-02'),
+  new Date('2019-12-02'),
+  new Date('2020-01-02'),
 ].map(d => ({
   value: d.getTime(),
   label: formatDateTick(d),
