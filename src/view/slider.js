@@ -1,10 +1,33 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useDebouncedCallback } from 'use-debounce';
 import PropTypes from 'prop-types';
 import { Slider as MUISlider } from '@material-ui/core';
+import {
+  PauseCircleOutlineRounded,
+  PlayCircleOutlineRounded,
+} from '@material-ui/icons';
+import styled from 'styled-components';
 
-import { setCurrentDate, DATE_DOMAIN } from '../state/ui-reducer';
+import {
+  setCurrentDate,
+  startPlayback,
+  stopPlayback,
+  DATE_DOMAIN,
+} from '../state/ui-reducer';
+import { selectPlaybackStart } from '../state/ui-selectors';
+import useInterval from '../hooks/use-interval';
+
+const Button = styled.button`
+  background-color: ${p =>
+    p.isCurrent ? 'rgba(153, 153, 255, 0.5)' : 'rgba(255, 255, 255, 0.5)'};
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  margin: 0 0.5rem 0.5rem 0;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100px;
+`;
 
 const ticks = [
   new Date('2010-07-02'),
@@ -109,27 +132,68 @@ function formatDateTick(date) {
 export default function Slider({ currentDate }) {
   const [sliderValue, setSliderValue] = useState(currentDate.getTime());
   const dispatch = useDispatch();
+
   const [debouncedSetDate] = useDebouncedCallback(value => {
     // console.log('debounced setCurrentDate to value:', value);
-    // setCurrentDate(value);
     dispatch(setCurrentDate(value));
   }, 1);
-  const onChange = (event, value) => {
-    // Immediately update slider thumb position
+  const onSliderChange = (event, value) => {
+    // Immediately update slider thumb position and stop playback
     setSliderValue(value);
+    dispatch(stopPlayback());
     // Update currentDate on a debounce
     debouncedSetDate(new Date(value));
   };
 
+  // TODO: abstract this into its own component / hook
+  // One day per tick
+  const TIME_PER_TICK = 24 * 60 * 60 * 1000;
+  // 60 ticks / sec = 1 year every ~6 seconds
+  const PLAYBACK_INTERVAL = 33;
+  const playbackStart = useSelector(selectPlaybackStart());
+  useInterval(
+    () => {
+      if (playbackStart) {
+        const elapsedTime = performance.now() - playbackStart.time;
+        const nextDateTime = Math.min(
+          playbackStart.date.getTime() +
+            (elapsedTime / PLAYBACK_INTERVAL) * TIME_PER_TICK,
+          DATE_DOMAIN.max.getTime()
+        );
+        dispatch(setCurrentDate(new Date(nextDateTime)));
+        setSliderValue(nextDateTime);
+
+        if (nextDateTime >= DATE_DOMAIN.max.getTime()) {
+          dispatch(stopPlayback());
+        }
+      }
+    },
+    playbackStart ? PLAYBACK_INTERVAL : null
+  );
+
+  const onPlayButtonClick = playbackStart
+    ? () => dispatch(stopPlayback())
+    : () =>
+        dispatch(startPlayback({ date: currentDate, time: performance.now() }));
+
   return (
-    <MUISlider
-      min={DATE_DOMAIN.min.getTime()}
-      max={DATE_DOMAIN.max.getTime()}
-      marks={ticks}
-      value={sliderValue}
-      onChange={onChange}
-      aria-labelledby={'continuous-slider'}
-    />
+    <>
+      <Button onClick={onPlayButtonClick}>
+        {playbackStart ? (
+          <PauseCircleOutlineRounded />
+        ) : (
+          <PlayCircleOutlineRounded />
+        )}
+      </Button>
+      <MUISlider
+        min={DATE_DOMAIN.min.getTime()}
+        max={DATE_DOMAIN.max.getTime()}
+        marks={ticks}
+        value={sliderValue}
+        onChange={onSliderChange}
+        aria-labelledby={'continuous-slider'}
+      />
+    </>
   );
 }
 

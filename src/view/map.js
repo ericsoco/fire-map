@@ -59,7 +59,7 @@ const alphaScale = scalePow()
 
 function getFireName(perimeter) {
   const name = perimeter.properties.FIRE_NAME || perimeter.properties.fireName;
-  return name
+  return (name || '')
     .split(' ')
     .map(
       word => `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`
@@ -82,10 +82,8 @@ function formatFireDate(date) {
     year: 'numeric',
   });
 }
-function getFireSizeAcres(perimeter, numDigits = 20) {
-  return parseFloat(
-    perimeter.properties.ACRES || perimeter.properties.GISACRES
-  ).toFixed(numDigits);
+function getFireSizeAcres(perimeter) {
+  return parseInt(perimeter.properties.ACRES || perimeter.properties.GISACRES);
 }
 function getFireSizeSqMiles(perimeter, numDigits = 20) {
   return (
@@ -123,7 +121,7 @@ function renderTooltip(hoverInfo) {
     <Tooltip left={x} top={y}>
       <FireName>{getFireName(object)}</FireName>
       {date && <FireDate>{formatFireDate(date)}</FireDate>}
-      <FireSize>{`${getFireSizeSqMiles(object, 2)} sq. miles`}</FireSize>
+      <FireSize>{`${getFireSizeAcres(object)} acres`}</FireSize>
     </Tooltip>
   );
 }

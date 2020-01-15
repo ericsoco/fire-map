@@ -84,7 +84,8 @@
   - [ ] refine prototype
     - [x] enable basic picking + tooltips
     - [ ] style tooltips
-    - [ ] add playback controls
+    - [ ] style controls
+    - [x] add playback controls
           implement in a way that a segment can be cued + played to tell stories,
           e.g. encircling of Ojai by Thomas Fire - start time - stop time - playback speed - metadata (title, desc, etc)
     - [x] rotate map to oblique view with north to left, south to right

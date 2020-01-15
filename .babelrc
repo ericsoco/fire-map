@@ -13,7 +13,17 @@
         "libraryName": "@material-ui/core",
         "libraryDirectory": "",
         "camel2DashComponentName": false
-      }
+      },
+      "mui-core"
     ],
+    [
+      "babel-plugin-import",
+      {
+        "libraryName": "@material-ui/icons",
+        "libraryDirectory": "",
+        "camel2DashComponentName": false
+      },
+      "mui-icons"
+    ]
   ]
 }
