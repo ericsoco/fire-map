@@ -15,7 +15,6 @@
     "datavis"
   ],
   "license": "ISC",
-  "main": "index.js",
   "dependencies": {
     "@babel/core": "^7.7.5",
     "@material-ui/core": "^4.8.3",
@@ -61,19 +60,23 @@
     "lint": "eslint src",
     "prettier": "prettier --write \"src/**/*.{js,json}\"",
     "start": "parcel --no-autoinstall index.html",
+    "build": "rm -rf ./dist; parcel build index.html",
+    "gh-deploy": "yarn build && git-directory-deploy --directory build/",
     "test": "echo \"Error: no test specified\" && exit 1",
     "fetch-fires": "node ./scripts/geoMAC-scraper.js",
     "fetch-all-fires": "node ./scripts/geoMAC-scraper.js static/config/fire-data-config.json",
     "merge-fires": "node ./scripts/merge-fires.js",
     "merge-all-fires": "node ./scripts/merge-fires.js static/config/fire-data-config.json"
   },
-  "browserslist": [
-    "> 1%",
-    "not dead"
-  ],
   "husky": {
     "hooks": {
       "pre-commit": "yarn lint && yarn prettier"
+    }
+  },
+  "default": "dist/index.html",
+  "targets": {
+    "default": {
+      "publicUrl": "./"
     }
   }
 }

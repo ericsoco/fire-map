@@ -3,3 +3,5 @@
 dist/
 node_modules/
 static/data/
+static/src-data/
+yarn-error.log

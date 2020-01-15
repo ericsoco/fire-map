@@ -6,16 +6,16 @@ import { loadAllFiresForYear } from '../state/fires-reducer';
 import { selectAllFiresForYearRequest } from '../state/fires-selectors';
 
 // TODO: host in dist and load at runtime rather than this parcel magic
-import fires2010 from 'url:~/static/data/fires/2010/allPerimeters_California_2010.geojson';
-import fires2011 from 'url:~/static/data/fires/2011/allPerimeters_California_2011.geojson';
-import fires2012 from 'url:~/static/data/fires/2012/allPerimeters_California_2012.geojson';
-import fires2013 from 'url:~/static/data/fires/2013/allPerimeters_California_2013.geojson';
-import fires2014 from 'url:~/static/data/fires/2014/allPerimeters_California_2014.geojson';
-import fires2015 from 'url:~/static/data/fires/2015/allPerimeters_California_2015.geojson';
-import fires2016 from 'url:~/static/data/fires/2016/allPerimeters_California_2016.geojson';
-import fires2017 from 'url:~/static/data/fires/2017/allPerimeters_California_2017.geojson';
-import fires2018 from 'url:~/static/data/fires/2018/allPerimeters_California_2018.geojson';
-import fires2019 from 'url:~/static/data/fires/2019/allPerimeters_California_2019.geojson';
+import fires2010 from 'url:~/static/data/allPerimeters_California_2010.geojson';
+import fires2011 from 'url:~/static/data/allPerimeters_California_2011.geojson';
+import fires2012 from 'url:~/static/data/allPerimeters_California_2012.geojson';
+import fires2013 from 'url:~/static/data/allPerimeters_California_2013.geojson';
+import fires2014 from 'url:~/static/data/allPerimeters_California_2014.geojson';
+import fires2015 from 'url:~/static/data/allPerimeters_California_2015.geojson';
+import fires2016 from 'url:~/static/data/allPerimeters_California_2016.geojson';
+import fires2017 from 'url:~/static/data/allPerimeters_California_2017.geojson';
+import fires2018 from 'url:~/static/data/allPerimeters_California_2018.geojson';
+import fires2019 from 'url:~/static/data/allPerimeters_California_2019.geojson';
 
 const FIRES_FOR_YEAR = {
   2010: fires2010,
