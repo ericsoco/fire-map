@@ -82,7 +82,8 @@
 - [ ] RFP
   - [ ] publish site to gh-pages / transmote
   - [ ] refine prototype
-    - [ ] enable basic picking + tooltips
+    - [x] enable basic picking + tooltips
+    - [ ] style tooltips
     - [ ] add playback controls
           implement in a way that a segment can be cued + played to tell stories,
           e.g. encircling of Ojai by Thomas Fire - start time - stop time - playback speed - metadata (title, desc, etc)

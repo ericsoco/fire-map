@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
 
+import { selectCurrentDate } from '../state/ui-selectors';
+
 import { stateConfigs } from '../constants';
 import Map from './map';
-import Slider, { dates } from './slider';
+import Slider from './slider';
 
 const Title = styled.h1`
   color: ${p => p.theme.color};
@@ -36,7 +39,8 @@ function formatDate(date) {
 
 export default function App({ match }) {
   const stateConfig = getStateConfig(match.params);
-  const [currentDate, setCurrentDate] = useState(dates[0]);
+  const currentDate = useSelector(selectCurrentDate());
+
   return (
     <div>
       <Map stateCode={stateConfig.code} currentDate={currentDate} />
@@ -44,7 +48,7 @@ export default function App({ match }) {
         <Title>{`${stateConfig.name} Wildfires through ${formatDate(
           currentDate
         )}`}</Title>
-        <Slider currentDate={currentDate} setCurrentDate={setCurrentDate} />
+        <Slider currentDate={currentDate} />
       </Overlay>
     </div>
   );

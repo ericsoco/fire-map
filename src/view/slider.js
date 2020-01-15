@@ -1,36 +1,10 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useDebouncedCallback } from 'use-debounce';
 import PropTypes from 'prop-types';
-import styled from 'styled-components';
 import { Slider as MUISlider } from '@material-ui/core';
 
-const Button = styled.button`
-  background-color: ${p =>
-    p.isCurrent ? 'rgba(153, 153, 255, 0.5)' : 'rgba(255, 255, 255, 0.5)'};
-  border-radius: 0.25rem;
-  padding: 0.5rem;
-  margin: 0 0.5rem 0.5rem 0;
-  font-size: 1rem;
-  cursor: pointer;
-  width: 100px;
-`;
-
-export const dates = [
-  new Date('2010-08-02'),
-  new Date('2011-08-02'),
-  new Date('2012-08-02'),
-  new Date('2013-08-02'),
-  new Date('2014-08-02'),
-  new Date('2015-08-02'),
-  new Date('2016-08-02'),
-  new Date('2017-08-02'),
-  new Date('2018-08-02'),
-  new Date('2019-08-02'),
-];
-
-// TODO: resolve timezone issue requiring dates to be -02 instead of -01
-// (maybe no longer an issue after moving from labeled buttons to slider?)
-export const DATE_DOMAIN = [new Date('2010-08-02'), new Date('2020-01-02')];
+import { setCurrentDate, DATE_DOMAIN } from '../state/ui-reducer';
 
 const ticks = [
   new Date('2010-07-02'),
@@ -127,22 +101,18 @@ function formatDateTick(date) {
     : '';
 }
 
-function formatDate(date) {
-  return `${date.getFullYear()}.${date.toLocaleDateString('en-US', {
-    month: 'short',
-  })}`;
-}
-
 // TODO: added debouncing to make dynamic loading smoother
 // and avoid unnecessary/duplicate requests. but...
 // i don't think there's actually a risk of that,
 // and more responsive UI calls for removing debounce.
 // Give that a shot and see how it feels.
-export default function Slider({ currentDate, setCurrentDate }) {
+export default function Slider({ currentDate }) {
   const [sliderValue, setSliderValue] = useState(currentDate.getTime());
+  const dispatch = useDispatch();
   const [debouncedSetDate] = useDebouncedCallback(value => {
     // console.log('debounced setCurrentDate to value:', value);
-    setCurrentDate(value);
+    // setCurrentDate(value);
+    dispatch(setCurrentDate(value));
   }, 1);
   const onChange = (event, value) => {
     // Immediately update slider thumb position
@@ -153,37 +123,16 @@ export default function Slider({ currentDate, setCurrentDate }) {
 
   return (
     <MUISlider
-      min={DATE_DOMAIN[0].getTime()}
-      max={DATE_DOMAIN[1].getTime()}
+      min={DATE_DOMAIN.min.getTime()}
+      max={DATE_DOMAIN.max.getTime()}
       marks={ticks}
       value={sliderValue}
       onChange={onChange}
       aria-labelledby={'continuous-slider'}
     />
   );
-  /*
-  return new Array(5).fill(0).map((_, i) => (
-    <div key={`buttons-${i}`}>
-      {dates.map(date => {
-        const d = new Date(date.getTime());
-        d.setMonth(d.getMonth() + i);
-        const label = formatDate(d);
-        return (
-          <Button
-            key={label}
-            onClick={() => setCurrentDate(d)}
-            isCurrent={d.getTime() === currentDate.getTime()}
-          >
-            {label}
-          </Button>
-        );
-      })}
-    </div>
-  ));
-  */
 }
 
 Slider.propTypes = {
   currentDate: PropTypes.instanceOf(Date),
-  setCurrentDate: PropTypes.func,
 };
