@@ -130,6 +130,7 @@ export default function Map({ currentDate, stateCode }) {
   const initialViewState = getInitialViewState(stateCode);
   const [viewState, setViewState] = useState(initialViewState);
   const [hoverInfo, setHoverInfo] = useState(null);
+
   const allFiresForYearRequest = useAllFiresForYearRequest(
     currentDate.getFullYear()
   );

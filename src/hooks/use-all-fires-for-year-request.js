@@ -6,6 +6,8 @@ import { loadAllFiresForYear } from '../state/fires-reducer';
 import { selectAllFiresForYearRequest } from '../state/fires-selectors';
 
 // TODO: host in dist and load at runtime rather than this parcel magic
+// Use alias for transformer-raw (specified in .parcelrc),
+// per https://github.com/parcel-bundler/parcel/issues/1080#issuecomment-557240449
 import fires2010 from 'url:~/static/data/allPerimeters_California_2010.geojson';
 import fires2011 from 'url:~/static/data/allPerimeters_California_2011.geojson';
 import fires2012 from 'url:~/static/data/allPerimeters_California_2012.geojson';

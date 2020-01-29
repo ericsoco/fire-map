@@ -53,7 +53,7 @@
   - [ ] rain (data layer, not likely a geo layer)
         diverging bar chart, showing deviation from norm (sim concept to SST)
   - [ ] nasa satellite hotspot detection
-        https://www.nytimes.com/interactive/2020/01/02/climate/australia-fires-map.html
+        https://earthdata.nasa.gov/earth-observation-data/near-real-time/firms/active-fire-data#tab-content-6
 - [ ] intro
   - [ ] dedication to firefighters
 - [ ] map
@@ -63,8 +63,12 @@
   - [ ] encode polygon height to:
     - number of times an area has burned?
     - days-length of fire?
+    - Elevation of each starts high, then dies down after fire is contained, like a burning fire. Could even fade from red to grey (ash), tho this won’t work well for additive blending...or maybe it will? Existing greys should push red into...hm, maybe pink. Maybe instead of grey, a greyish yellow?
   - [ ] additive blending to highlight overlapping perimeters?
+        Invert basemap colors (maintain terrain on dark tiles?) to enable additive blending? Stack fires w/additive (once showing only most recent perimeter for each fire)
   - [x] is 2019 data available yet?
+  - [ ] label megafires (> 100k acres) on slider
+    - [ ] zoom to first megafire in dataset
 
 ### Current next steps:
 
@@ -91,8 +95,8 @@
     - [x] rotate map to oblique view with north to left, south to right
     - [x] load all perimeters, not just last, to show fires growing
   - [ ] write
-    - [ ] inspiration / reason
-    - [ ] narrative
+    - [x] inspiration / reason
+    - [x] narrative
     - [ ] current prototype
     - [ ] aspirations
       - [ ] features:
@@ -109,4 +113,4 @@
         - deployment target: desktop-first, but could possibly be adapted to mobile
           - load less data / omit smaller fires
           - focus more on highlighting individual fires and less on open-ended map exploration
-  - [ ] send to cfp@parametric.press, Subject: [Pitch: California Wildfires Map]
+  - [ ] send to cfp@parametric.press, Subject: [Pitch] The Fires Next Time: California Wildfires Map
