@@ -39,7 +39,12 @@
 - [ ] fires layer
   - [x] perf: handle incremental loads with one layer / data payload
         https://deck.gl/#/documentation/developer-guide/performance-optimization?section=use-updatetriggers#handle-incremental-data-loading
-  - [ ] only render most recent perimeter for each fire
+  - [x] only render most recent perimeter for each fire
+  - [ ] ^^ not sure about best perf strategy; may need to do filtering
+        in getFillColor instead of passing new array every time
+        (generated in extractLatestPerimeters)...
+  - [ ] memoize properly, not using useState, per comments in map.js
+  - [ ] look into Date comparison optimizations in - map.js::extractLatestPerimeters - use-all-fires-for-year-request.js::sortPerimetersByDate
   - [x] handle requests for years beyond the last gracefully:
         don't blank out whole fire layer because of null request
 - [ ] slider

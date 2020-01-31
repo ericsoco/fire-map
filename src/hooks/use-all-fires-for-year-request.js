@@ -33,7 +33,37 @@ const FIRES_FOR_YEAR = {
 };
 
 /**
+ * Sort perimeters in reverse chronological order
+ */
+function sortPerimetersByDate(a, b) {
+  return (
+    new Date(b.properties.DATE_ || b.properties.perDatTime) -
+    new Date(a.properties.DATE_ || a.properties.perDatTime)
+  );
+}
+
+/**
+ * Map perimeters to fire name and
+ * sort reverse chronologically within each.
+ */
+function mapByFire(data) {
+  const byFire = data.features.reduce((map, feature) => {
+    const name = feature.properties.FIRE_NAME || feature.properties.fireName;
+    if (name && !map[name]) {
+      map[name] = [];
+    }
+    map[name].push(feature);
+    return map;
+  }, {});
+  Object.keys(byFire).forEach(name => {
+    byFire[name] = byFire[name].sort(sortPerimetersByDate);
+  });
+  return byFire;
+}
+
+/**
  * Loads all perimeters of each fire in the requested year.
+ * Note: Result is not GeoJSON, it is a map of perimeters by fire name.
  */
 export default function useAllFiresForYearRequest(year) {
   // Process the selected year request if it has not yet been started
@@ -48,7 +78,12 @@ export default function useAllFiresForYearRequest(year) {
       dispatch(loadAllFiresForYear.start({ year }));
       axios(firesForYear)
         .then(response => {
-          dispatch(loadAllFiresForYear.success({ year, data: response.data }));
+          dispatch(
+            loadAllFiresForYear.success({
+              year,
+              data: mapByFire(response.data),
+            })
+          );
         })
         .catch(error => {
           dispatch(loadAllFiresForYear.failure({ year, error }));

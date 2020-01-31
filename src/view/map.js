@@ -150,6 +150,12 @@ function getInitialViewState(stateCode) {
  * setting data to a new object when data have changed,
  * else passing through the previous object to maintaining strict equality
  * to benefit deck.gl rendering performance.
+ *
+ * TODO: this is not right...
+ * makes sense to memoize, but there's no need for the extra render
+ * caused by the setData() call. change this to a more standard
+ * memoization strategy (useMemo perhaps?) with memo condition being
+ * the number of features.
  */
 function writeData(firesRequests, destGeoJSON, setData) {
   const features = firesRequests
@@ -167,6 +173,37 @@ function writeData(firesRequests, destGeoJSON, setData) {
   }
 
   return destGeoJSON;
+}
+
+/**
+ * Extract only the latest perimeter of each fire,
+ * and flatten results into a features array
+ */
+function extractLatestPerimeters(allFiresRequest, currentDate) {
+  if (!isLoaded(allFiresRequest)) {
+    return allFiresRequest;
+  }
+
+  const latestPerimeters = Object.keys(allFiresRequest.data).reduce(
+    (lastPerimeters, name) => {
+      const latestPerimeterForFire = allFiresRequest.data[name].find(d => {
+        const dateStr = d.properties.DATE_ || d.properties.perDatTime;
+        return dateStr && new Date(dateStr) <= currentDate;
+      });
+      if (latestPerimeterForFire) {
+        lastPerimeters.push(latestPerimeterForFire);
+      }
+      return lastPerimeters;
+    },
+    []
+  );
+  return {
+    ...allFiresRequest,
+    data: {
+      type: 'FeatureCollection',
+      features: latestPerimeters,
+    },
+  };
 }
 
 // TODO: move tooltip and associated utils to separate module
@@ -217,7 +254,11 @@ export default function Map({ currentDate, stateCode }) {
     previousYearData,
     setPreviousYearData
   );
-  writeData([allFiresForYearRequest], currentYearData, setCurrentYearData);
+  writeData(
+    [extractLatestPerimeters(allFiresForYearRequest, currentDate)],
+    currentYearData,
+    setCurrentYearData
+  );
 
   // TODO: handle status === ERROR
   return (
@@ -238,7 +279,7 @@ export default function Map({ currentDate, stateCode }) {
           // renders only the last perimeter of each fire,
           // with fixed alpha for all perimeters
           <GeoJsonLayer
-            id="prevYears"
+            id="priorYears"
             data={priorYearsData}
             updateTriggers={{
               getFillColor: [currentDate],
@@ -261,7 +302,7 @@ export default function Map({ currentDate, stateCode }) {
           // renders only the last perimeter of each fire,
           // with scaled alpha for all perimeters
           <GeoJsonLayer
-            id="prevYears"
+            id="prevYear"
             data={previousYearData}
             updateTriggers={{
               getFillColor: [currentDate],
