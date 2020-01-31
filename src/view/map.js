@@ -45,6 +45,55 @@ const FireSize = styled.div`
 `;
 
 const performAdditiveBlending = false;
+const layerParameters = {
+  // prevent z-fighting flicker
+  [GL.DEPTH_TEST]: false,
+  ...(performAdditiveBlending
+    ? {
+        // additive blending
+        [GL.BLEND]: true,
+        [GL.BLEND_SRC_RGB]: GL.ONE,
+        [GL.BLEND_DST_RGB]: GL.ONE,
+        [GL.BLEND_EQUATION]: GL.FUNC_ADD,
+      }
+    : {}),
+};
+
+const staticData = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [-119.46006240879002, 35.83368519862416],
+            [-119.46458997806226, 35.83353498892022],
+            [-119.46461321483787, 35.836688844155994],
+            [-119.46186485831102, 35.835766588532415],
+            [-119.46006240879002, 35.83368519862416],
+          ],
+        ],
+      },
+      properties: {
+        UNIT_ID: 'CA-CND',
+        FIRE_NUM: 'FE1R',
+        FIRE_NAME: 'Allensworth',
+        DATE_: '2010-05-28T00:00:00.000Z',
+        TIME_: '0000',
+        COMMENTS: '',
+        AGENCY: 'BLM',
+        ACTIVE: 'N',
+        FIRE: '',
+        YEAR_: '2010',
+        LOAD_DATE: '2010-06-02T00:00:00.000Z',
+        ACRES: 25.85,
+      },
+    },
+  ],
+};
+
 // https://docs.mapbox.com/api/maps/#styles
 const basemap = performAdditiveBlending
   ? 'mapbox://styles/mapbox/dark-v10'
@@ -97,17 +146,27 @@ function getInitialViewState(stateCode) {
 }
 
 /**
- * Flatten multiple GeoJSON requests into a single FeatureCollection
+ * Flatten multiple GeoJSON requests into a single FeatureCollection,
+ * setting data to a new object when data have changed,
+ * else passing through the previous object to maintaining strict equality
+ * to benefit deck.gl rendering performance.
  */
-function flattenData(firesRequests) {
+function writeData(firesRequests, destGeoJSON, setData) {
   const features = firesRequests
     .filter(isLoaded)
     .map(request => request.data.features)
     .reduce((values, array) => [...values, ...array], []);
-  return {
-    type: 'FeatureCollection',
-    features,
-  };
+
+  // If number of features has changed, force an update
+  // by setting the data to a new object
+  if (features.length !== destGeoJSON.features.length) {
+    setData({
+      type: 'FeatureCollection',
+      features,
+    });
+  }
+
+  return destGeoJSON;
 }
 
 // TODO: move tooltip and associated utils to separate module
@@ -131,15 +190,34 @@ export default function Map({ currentDate, stateCode }) {
   const [viewState, setViewState] = useState(initialViewState);
   const [hoverInfo, setHoverInfo] = useState(null);
 
+  const [priorYearsData, setPriorYearsData] = useState({
+    type: 'FeatureCollection',
+    features: [],
+  });
+  const [previousYearData, setPreviousYearData] = useState({
+    type: 'FeatureCollection',
+    features: [],
+  });
+  const [currentYearData, setCurrentYearData] = useState({
+    type: 'FeatureCollection',
+    features: [],
+  });
+
   const allFiresForYearRequest = useAllFiresForYearRequest(
     currentDate.getFullYear()
   );
-  const {
-    selectedYearRequest,
-    previousYearRequests,
-  } = useCompleteFiresForYearRequest(currentDate.getFullYear());
+  const { priorYearRequests } = useCompleteFiresForYearRequest(
+    currentDate.getFullYear()
+  );
+  const previousYearRequest = priorYearRequests.pop();
 
-  const data = flattenData([...previousYearRequests, allFiresForYearRequest]);
+  writeData(priorYearRequests, priorYearsData, setPriorYearsData);
+  writeData(
+    previousYearRequest ? [previousYearRequest] : [],
+    previousYearData,
+    setPreviousYearData
+  );
+  writeData([allFiresForYearRequest], currentYearData, setCurrentYearData);
 
   // TODO: handle status === ERROR
   return (
@@ -154,10 +232,37 @@ export default function Map({ currentDate, stateCode }) {
           mapboxApiAccessToken={process.env.MapboxAccessToken}
           mapStyle={basemap}
         />
-        {isLoaded(selectedYearRequest) && (
+
+        {isLoaded(priorYearRequests[priorYearRequests.length - 1]) && (
+          // Layer for all years before previous:
+          // renders only the last perimeter of each fire,
+          // with fixed alpha for all perimeters
           <GeoJsonLayer
-            id="fires"
-            data={data}
+            id="prevYears"
+            data={priorYearsData}
+            updateTriggers={{
+              getFillColor: [currentDate],
+            }}
+            stroked={false}
+            filled={true}
+            extruded={false}
+            lineWidthScale={20}
+            lineWidthMinPixels={2}
+            getFillColor={[255, 80, 60, 100]}
+            getLineColor={[255, 80, 60, 255]}
+            parameters={layerParameters}
+            pickable={true}
+            onHover={setHoverInfo}
+          />
+        )}
+
+        {isLoaded(previousYearRequest) && (
+          // Layer for previous year:
+          // renders only the last perimeter of each fire,
+          // with scaled alpha for all perimeters
+          <GeoJsonLayer
+            id="prevYears"
+            data={previousYearData}
             updateTriggers={{
               getFillColor: [currentDate],
             }}
@@ -172,26 +277,42 @@ export default function Map({ currentDate, stateCode }) {
               return [255, 80, 60, alpha];
             }}
             getLineColor={[255, 80, 60, 255]}
-            parameters={{
-              // prevent z-fighting flicker
-              [GL.DEPTH_TEST]: false,
-              ...(performAdditiveBlending
-                ? {
-                    // additive blending
-                    [GL.BLEND]: true,
-                    [GL.BLEND_SRC_RGB]: GL.ONE,
-                    [GL.BLEND_DST_RGB]: GL.ONE,
-                    [GL.BLEND_EQUATION]: GL.FUNC_ADD,
-                  }
-                : {}),
+            parameters={layerParameters}
+            pickable={true}
+            onHover={setHoverInfo}
+          />
+        )}
+
+        {isLoaded(allFiresForYearRequest) && (
+          // Layer for currently-selected year:
+          // renders most-recent perimeter for each fire,
+          // with scaled alpha for all perimeters
+          // TODO: render _only_ the most recent perimeter for each fire
+          <GeoJsonLayer
+            id="currentYear"
+            data={currentYearData}
+            updateTriggers={{
+              getFillColor: [currentDate],
             }}
+            stroked={false}
+            filled={true}
+            extruded={false}
+            lineWidthScale={20}
+            lineWidthMinPixels={2}
+            getFillColor={d => {
+              const age = currentDate - getFireDate(d);
+              const alpha = age >= 0 ? alphaScale(age) : 0;
+              return [255, 80, 60, alpha];
+            }}
+            getLineColor={[255, 80, 60, 255]}
+            parameters={layerParameters}
             pickable={true}
             onHover={setHoverInfo}
           />
         )}
         {renderTooltip(hoverInfo)}
       </DeckGL>
-      {isLoading(selectedYearRequest) && <LoadingIcon withBackground />}
+      {isLoading(allFiresForYearRequest) && <LoadingIcon withBackground />}
     </StyledContainer>
   );
 }

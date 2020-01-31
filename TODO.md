@@ -37,10 +37,10 @@
         looks like we are going to have to load all geojsons for each fire,
         tho we only need to load those near the currentDate...
 - [ ] fires layer
-  - [ ] perf: handle incremental loads with one layer / data payload
+  - [x] perf: handle incremental loads with one layer / data payload
         https://deck.gl/#/documentation/developer-guide/performance-optimization?section=use-updatetriggers#handle-incremental-data-loading
   - [ ] only render most recent perimeter for each fire
-  - [ ] handle requests for years beyond the last gracefully:
+  - [x] handle requests for years beyond the last gracefully:
         don't blank out whole fire layer because of null request
 - [ ] slider
   - [x] debounce according to distance moved; longer lag for fast motion to make lazy-loading work better
@@ -113,4 +113,4 @@
         - deployment target: desktop-first, but could possibly be adapted to mobile
           - load less data / omit smaller fires
           - focus more on highlighting individual fires and less on open-ended map exploration
-  - [ ] send to cfp@parametric.press, Subject: [Pitch] The Fires Next Time: California Wildfires Map
+  - [x] send to cfp@parametric.press, Subject: [Pitch] The Fires Next Time: California Wildfires Map
