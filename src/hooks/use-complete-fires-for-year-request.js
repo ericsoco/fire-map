@@ -109,7 +109,7 @@ export default function useCompleteFiresForYearRequest(selectedYear) {
   // also return previous years as they resolve in the background.
   return {
     selectedYearRequest: selectedYearRequest,
-    priorYearRequests: useSelector(
+    priorYearsRequests: useSelector(
       selectCompleteFiresBeforeYearRequest(selectedYear)
     ),
   };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from '@deck.gl/layers';
@@ -146,33 +146,99 @@ function getInitialViewState(stateCode) {
 }
 
 /**
- * Flatten multiple GeoJSON requests into a single FeatureCollection,
- * setting data to a new object when data have changed,
- * else passing through the previous object to maintaining strict equality
- * to benefit deck.gl rendering performance.
- *
- * TODO: this is not right...
- * makes sense to memoize, but there's no need for the extra render
- * caused by the setData() call. change this to a more standard
- * memoization strategy (useMemo perhaps?) with memo condition being
- * the number of features.
+ * Extract GeoJSON features from a list of requests.
  */
-function writeData(firesRequests, destGeoJSON, setData) {
-  const features = firesRequests
+function getFeatures(firesRequests) {
+  return firesRequests
     .filter(isLoaded)
     .map(request => request.data.features)
     .reduce((values, array) => [...values, ...array], []);
+}
 
-  // If number of features has changed, force an update
-  // by setting the data to a new object
-  if (features.length !== destGeoJSON.features.length) {
-    setData({
-      type: 'FeatureCollection',
-      features,
-    });
+/**
+ * Flatten multiple GeoJSON requests into a single FeatureCollection,
+ * returning as a new object only if the GeoJSON features have changed.
+ * Else, returns the current GeoJSON object unmodified,
+ * to improve deck.gl rendering performance.
+ */
+function writeData(firesRequests, existingGeoJSON) {
+  const features = getFeatures(firesRequests);
+
+  // If number of features has changed, return the new features.
+  // Else, pass through the existing GeoJSON.
+  return features.length !== existingGeoJSON.features.length
+    ? {
+        type: 'FeatureCollection',
+        features,
+      }
+    : existingGeoJSON;
+}
+
+/**
+ * Return all perimeters, flattened into a features array.
+ * Adds a flag to each, indicating if it is the last perimeter for that fire.
+ */
+function getAllPerimetersWithLastFlag(allFiresRequest, currentDate) {
+  if (!isLoaded(allFiresRequest)) {
+    return allFiresRequest;
   }
 
-  return destGeoJSON;
+  //
+  // TODO NEXT:
+  // Trying to figure out how to performantly render only the last perimeter
+  // of each fire, given a `currentDate`. Need to keep the array strict equal
+  // across lifecycles, but set a flag for each perimeter,
+  // then check that flag in getFillColor.
+  //
+  // One option:
+  // write the flattened arrays for each year beforehand (i.e. change/replace
+  // use-all-fires::mapByFire), with `isLast` flag set to `false` on every
+  // perimeter. Then, this function mutates objects in that array directly,
+  // writing the `isLast` flag to each. This strategy maintains strict equality
+  // on the `data` array (currentYearFeatures / currentYearData) and
+  // provides a flag for use in getFillColor.
+  //
+  // Note: in addition to `isLast`, write a unix timestamp to each perimeter
+  // as well, to speed the `currentDate` comparison below.
+  // In fact, should normalize date and name immediately on data load
+  // as well, and remove accessors like getFireDate / getFireName.
+  //
+
+  /*
+  const latestPerimeters = Object.keys(allFiresRequest.data).reduce(
+    (lastPerimeters, name) => {
+      // Perimeters for each fire already sorted in reverse chron order
+      const perimeters = allFiresRequest.data[name].map(d => {
+        const dateStr = d.properties.DATE_ || d.properties.perDatTime;
+        return {
+          ...d,
+          isLast: dateStr && new Date(dateStr) <= currentDate;
+        } 
+        
+
+          ...d,
+          isLast: 
+      });
+
+      const latestPerimeterForFire = allFiresRequest.data[name].find(d => {
+        const dateStr = d.properties.DATE_ || d.properties.perDatTime;
+        return dateStr && new Date(dateStr) <= currentDate;
+      });
+      if (latestPerimeterForFire) {
+        lastPerimeters.push(latestPerimeterForFire);
+      }
+      return lastPerimeters;
+    },
+    []
+  );
+  return {
+    ...allFiresRequest,
+    data: {
+      type: 'FeatureCollection',
+      features: latestPerimeters,
+    },
+  };
+  */
 }
 
 /**
@@ -186,6 +252,7 @@ function extractLatestPerimeters(allFiresRequest, currentDate) {
 
   const latestPerimeters = Object.keys(allFiresRequest.data).reduce(
     (lastPerimeters, name) => {
+      // Perimeters for each fire already sorted in reverse chron order
       const latestPerimeterForFire = allFiresRequest.data[name].find(d => {
         const dateStr = d.properties.DATE_ || d.properties.perDatTime;
         return dateStr && new Date(dateStr) <= currentDate;
@@ -227,38 +294,78 @@ export default function Map({ currentDate, stateCode }) {
   const [viewState, setViewState] = useState(initialViewState);
   const [hoverInfo, setHoverInfo] = useState(null);
 
-  const [priorYearsData, setPriorYearsData] = useState({
-    type: 'FeatureCollection',
-    features: [],
-  });
-  const [previousYearData, setPreviousYearData] = useState({
-    type: 'FeatureCollection',
-    features: [],
-  });
-  const [currentYearData, setCurrentYearData] = useState({
-    type: 'FeatureCollection',
-    features: [],
-  });
+  // const [priorYearsData, setPriorYearsData] = useState({
+  //   type: 'FeatureCollection',
+  //   features: [],
+  // });
+  // const [previousYearData, setPreviousYearData] = useState({
+  //   type: 'FeatureCollection',
+  //   features: [],
+  // });
+  // const [currentYearData, setCurrentYearData] = useState({
+  //   type: 'FeatureCollection',
+  //   features: [],
+  // });
 
+  const { priorYearsRequests } = useCompleteFiresForYearRequest(
+    currentDate.getFullYear()
+  );
+  const previousYearRequest = priorYearsRequests.pop();
   const allFiresForYearRequest = useAllFiresForYearRequest(
     currentDate.getFullYear()
   );
-  const { priorYearRequests } = useCompleteFiresForYearRequest(
-    currentDate.getFullYear()
-  );
-  const previousYearRequest = priorYearRequests.pop();
 
-  writeData(priorYearRequests, priorYearsData, setPriorYearsData);
-  writeData(
-    previousYearRequest ? [previousYearRequest] : [],
-    previousYearData,
-    setPreviousYearData
+  const priorYearsFeatures = getFeatures(priorYearsRequests);
+  const numPriorYearsFeatures = priorYearsFeatures.length;
+  const priorYearsData = useMemo(() => {
+    // If number of features has changed, return the new features.
+    // Else, pass through the existing GeoJSON.
+    return {
+      type: 'FeatureCollection',
+      features: priorYearsFeatures,
+    };
+  }, [numPriorYearsFeatures]);
+
+  const previousYearFeatures = getFeatures(
+    previousYearRequest ? [previousYearRequest] : []
   );
-  writeData(
-    [extractLatestPerimeters(allFiresForYearRequest, currentDate)],
-    currentYearData,
-    setCurrentYearData
-  );
+  const numPreviousYearFeatures = previousYearFeatures.length;
+  const previousYearData = useMemo(() => {
+    // If number of features has changed, return the new features.
+    // Else, pass through the existing GeoJSON.
+    return {
+      type: 'FeatureCollection',
+      features: previousYearFeatures,
+    };
+  }, [numPreviousYearFeatures]);
+
+  // const currentYearFeatures = getFeatures([
+  //   extractLatestPerimeters(allFiresForYearRequest, currentDate),
+  // ]);
+  const currentYearFeatures = getFeatures([
+    getAllPerimetersWithLastFlag(allFiresForYearRequest),
+  ]);
+  const numCurrentYearFeatures = currentYearFeatures.length;
+  const currentYearData = useMemo(() => {
+    // If number of features has changed, return the new features.
+    // Else, pass through the existing GeoJSON.
+    return {
+      type: 'FeatureCollection',
+      features: currentYearFeatures,
+    };
+  }, [numCurrentYearFeatures]);
+
+  // writeData(priorYearsRequests, priorYearsData, setPriorYearsData);
+  // writeData(
+  //   previousYearRequest ? [previousYearRequest] : [],
+  //   previousYearData,
+  //   setPreviousYearData
+  // );
+  // writeData(
+  //   [extractLatestPerimeters(allFiresForYearRequest, currentDate)],
+  //   currentYearData,
+  //   setCurrentYearData
+  // );
 
   // TODO: handle status === ERROR
   return (
@@ -274,7 +381,7 @@ export default function Map({ currentDate, stateCode }) {
           mapStyle={basemap}
         />
 
-        {isLoaded(priorYearRequests[priorYearRequests.length - 1]) && (
+        {isLoaded(priorYearsRequests[priorYearsRequests.length - 1]) && (
           // Layer for all years before previous:
           // renders only the last perimeter of each fire,
           // with fixed alpha for all perimeters
