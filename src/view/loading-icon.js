@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import styled, { keyframes } from 'styled-components';
 
 const Container = styled.div`
@@ -85,3 +86,7 @@ export default function LoadingIcon({ withBackground }) {
     </Container>
   );
 }
+
+LoadingIcon.propTypes = {
+  withBackground: PropTypes.boolean,
+};

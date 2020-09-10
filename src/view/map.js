@@ -59,41 +59,6 @@ const layerParameters = {
     : {}),
 };
 
-const staticData = {
-  type: 'FeatureCollection',
-  features: [
-    {
-      type: 'Feature',
-      geometry: {
-        type: 'Polygon',
-        coordinates: [
-          [
-            [-119.46006240879002, 35.83368519862416],
-            [-119.46458997806226, 35.83353498892022],
-            [-119.46461321483787, 35.836688844155994],
-            [-119.46186485831102, 35.835766588532415],
-            [-119.46006240879002, 35.83368519862416],
-          ],
-        ],
-      },
-      properties: {
-        UNIT_ID: 'CA-CND',
-        FIRE_NUM: 'FE1R',
-        FIRE_NAME: 'Allensworth',
-        DATE_: '2010-05-28T00:00:00.000Z',
-        TIME_: '0000',
-        COMMENTS: '',
-        AGENCY: 'BLM',
-        ACTIVE: 'N',
-        FIRE: '',
-        YEAR_: '2010',
-        LOAD_DATE: '2010-06-02T00:00:00.000Z',
-        ACRES: 25.85,
-      },
-    },
-  ],
-};
-
 // https://docs.mapbox.com/api/maps/#styles
 const basemap = performAdditiveBlending
   ? 'mapbox://styles/mapbox/dark-v10'
@@ -121,9 +86,11 @@ function getFireDate(perimeter) {
     perimeter.properties.DATE_ || perimeter.properties.perDatTime
   );
 }
+/*
 function getFireDateRange(perimeter, data) {
   // TODO: implement
 }
+*/
 function formatFireDate(date) {
   return date.toLocaleDateString('en-US', {
     month: 'long',
@@ -134,13 +101,14 @@ function formatFireDate(date) {
 function getFireSizeAcres(perimeter) {
   return parseInt(perimeter.properties.ACRES || perimeter.properties.GISACRES);
 }
+/*
 function getFireSizeSqMiles(perimeter, numDigits = 20) {
   return (
     parseFloat(perimeter.properties.ACRES || perimeter.properties.GISACRES) /
     640
   ).toFixed(numDigits);
 }
-
+*/
 function getInitialViewState(stateCode) {
   return stateConfigs[stateCode].mapInit;
 }
