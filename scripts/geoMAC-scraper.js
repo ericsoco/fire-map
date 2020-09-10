@@ -153,6 +153,16 @@ function scrapeStatePage(params, response, onPageComplete) {
   next();
 }
 
+const NULL_GEOMETRY_FILES = [
+  'ca_brannan_20140605_1000_dd83',
+  'ca_gasquet_complex_divide_20150804_0956_dd83',
+  'ca_gasquet_complex_divide_20150804_2137_dd83',
+  'ca_cabin_20170811_0000_dd83',
+];
+
+// TODO: what is going on with this one file?
+const ERROR_FILES = ['ca_route_complex_20150813_2230_dd83'];
+
 function scrapeFirePage(params, response, onPageComplete) {
   const { dest, year, state, fire } = params;
   const destPath = `${dest}/${year}/${state}/${fire}`;
@@ -212,7 +222,16 @@ function scrapeFirePage(params, response, onPageComplete) {
           fileCount.done++;
           if (fileCount.done >= fileCount.total) {
             try {
-              processPerimeter(destPath, name);
+              const hasNullGeometry = NULL_GEOMETRY_FILES.includes(name);
+              const willThrow = ERROR_FILES.includes(name);
+              if (!hasNullGeometry && !willThrow) {
+                processPerimeter(destPath, name);
+              } else {
+                const warning = hasNullGeometry
+                  ? `Skipping file with null geometry: ${name}`
+                  : `Skipping file that throws uncaught error from processPerimeter: ${name}`;
+                console.warn(warning);
+              }
             } catch (processError) {
               logError(processError);
             }
@@ -287,7 +306,10 @@ function processPerimeter(folder, perimeterName) {
     mapshaper.runCommands(
       `-i "${shapefile}" -simplify ${simplifyPercent}% -o "${filePrefix}.geojson" format=geojson`,
       err => {
-        if (err) throw err;
+        if (err) {
+          debugger;
+          throw err;
+        }
         console.info(
           `🗜 Mapshaped ${filePrefix} to GeoJSON and simplified to ${simplifyPercent}%`
         );

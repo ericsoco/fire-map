@@ -119,11 +119,11 @@ function mergeFiresForStateYear(params, cb) {
       : perims;
   }, {});
 
-  // Merge all perimeters into single file and write to year folder.
-  // E.g. static/data/2010/allPerimeters_California_2010.geojson
+  // Merge all perimeters into single file and write to year/state folder.
+  // E.g. static/data/2010/California/allPerimeters.geojson
   mergePerimeters(
     allPerimeters,
-    `${src}/${year}/allPerimeters_${state}_${year}.geojson`,
+    `${src}/${year}/${state}/allPerimeters.geojson`,
     onMergeComplete('All')
   );
 
@@ -140,11 +140,11 @@ function mergeFiresForStateYear(params, cb) {
       : perims;
   }, {});
 
-  // Merge final perimeters into single file and write to year folder.
-  // E.g. static/data/2010/finalPerimeters_California_2010.geojson
+  // Merge final perimeters into single file and write to year/state folder.
+  // E.g. static/data/2010/California/finalPerimeters.geojson
   mergePerimeters(
     finalPerimeters,
-    `${src}/${year}/finalPerimeters_${state}_${year}.geojson`,
+    `${src}/${year}/${state}/finalPerimeters.geojson`,
     onMergeComplete('Final')
   );
 }

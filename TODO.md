@@ -3,6 +3,9 @@
 ## Data
 
 - [ ] invalid data
+      how best to handle? prob want to remove perimeters with "geometry": null
+      in data processing step, but this is non-trivial as data processing deals
+      with files, without peeking into their contents.
   - [ ] 2012 has bad value(s) -- ??
   - [ ] Brannan (2014) has `null` geometry
   - [ ] Gasquet Complex (2015) has `null` geometry
@@ -18,6 +21,8 @@
   - [ ] consider making one all-year/all-fires file at low-res (high simplification),
         to display on site init
   - [x] fix mapshaper 'Command expects a single value' error
+- [ ] hex aggregation
+  - [ ] reduce perimeters to h3 hexes at low zoom, for perf?
 
 ## Application
 
@@ -74,6 +79,8 @@
   - [x] is 2019 data available yet?
   - [ ] label megafires (> 100k acres) on slider
     - [ ] zoom to first megafire in dataset
+  - [ ] differential bundling for older browser support
+        https://v2.parceljs.org/getting-started/webapp/#differential-serving
 
 ### Current next steps:
 
