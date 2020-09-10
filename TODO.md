@@ -79,6 +79,7 @@
   - [x] is 2019 data available yet?
   - [ ] label megafires (> 100k acres) on slider
     - [ ] zoom to first megafire in dataset
+  - [ ] search for fire by name (a la LA Times map)
   - [ ] differential bundling for older browser support
         https://v2.parceljs.org/getting-started/webapp/#differential-serving
 
