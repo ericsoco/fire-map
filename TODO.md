@@ -2,6 +2,7 @@
 
 ## Data
 
+- [ ] get 2020 data (fuck 2020.)
 - [ ] invalid data
       how best to handle? prob want to remove perimeters with "geometry": null
       in data processing step, but this is non-trivial as data processing deals
@@ -21,8 +22,6 @@
   - [ ] consider making one all-year/all-fires file at low-res (high simplification),
         to display on site init
   - [x] fix mapshaper 'Command expects a single value' error
-- [ ] hex aggregation
-  - [ ] reduce perimeters to h3 hexes at low zoom, for perf?
 
 ## Application
 
@@ -57,6 +56,9 @@
   - [ ] consider coloring segments of slider by year depending if data loaded for that year (like buffering/progress bar)
   - [ ] label with notable fires (bigger than X acres, biggest per year, etc)
     - [ ] link labels to zoom map to fire (?)
+  - [ ] add bar chart of monthly acres burned
+    - [ ] how to calculate?
+    - [ ] write script to pre-calculate and write to a file; load on init
   - stuff from email (diverging bar chart for pre)
 - [ ] other layers
   - [ ] developed area / urban areas (just via basemap?)
@@ -66,6 +68,8 @@
         https://earthdata.nasa.gov/earth-observation-data/near-real-time/firms/active-fire-data#tab-content-6
 - [ ] intro
   - [ ] dedication to firefighters
+- [ ] bugs
+  - [ ] why do title + slider disappear while LoadingIcon visible?
 - [ ] map
   - [ ] Animate viewport from flat/top-down view to oblique view;
         oblique view (w/ pitch + bearing) is too foreign a perspective to start with
@@ -76,6 +80,8 @@
     - Elevation of each starts high, then dies down after fire is contained, like a burning fire. Could even fade from red to grey (ash), tho this won’t work well for additive blending...or maybe it will? Existing greys should push red into...hm, maybe pink. Maybe instead of grey, a greyish yellow?
   - [ ] additive blending to highlight overlapping perimeters?
         Invert basemap colors (maintain terrain on dark tiles?) to enable additive blending? Stack fires w/additive (once showing only most recent perimeter for each fire)
+  - [ ] hex aggregation
+    - [ ] reduce perimeters to h3 hexes at low zoom, for perf?
   - [x] is 2019 data available yet?
   - [ ] label megafires (> 100k acres) on slider
     - [ ] zoom to first megafire in dataset
@@ -121,7 +127,7 @@
         - ...?
       - [ ] technical:
         - improve loading
-        - reduce bundle size
+        - reduce bundle size (5.9MB???)
         - all open-source, including data scraper
         - deployment target: desktop-first, but could possibly be adapted to mobile
           - load less data / omit smaller fires

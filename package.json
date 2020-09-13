@@ -68,7 +68,9 @@
     "fetch-all-fires": "node ./scripts/geoMAC-scraper.js static/config/fire-data-config.json",
     "fetch-all-fires:debug": "node --inspect ./scripts/geoMAC-scraper.js static/config/fire-data-config.json",
     "merge-fires": "node ./scripts/merge-fires.js",
-    "merge-all-fires": "node ./scripts/merge-fires.js static/config/fire-data-config.json"
+    "merge-all-fires": "node ./scripts/merge-fires.js static/config/fire-data-config.json",
+    "process-fires": "node ./scripts/process-fires.js",
+    "process-all-fires": "node ./scripts/process-fires.js static/config/fire-data-config.json"
   },
   "husky": {
     "hooks": {

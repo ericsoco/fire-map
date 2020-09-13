@@ -23,6 +23,12 @@ yarn fetch-all-fires
 yarn merge-all-fires
 ```
 
+3. Process metadata for fire perimeters:
+
+```
+yarn process-all-fires
+```
+
 ## Running
 
 First, follow the steps above to fetch + process fire perimeter data.

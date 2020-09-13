@@ -228,6 +228,10 @@ export default function Map({ currentDate, stateCode }) {
     setCurrentYearData
   );
 
+  if (isLoading(allFiresForYearRequest)) {
+    console.log('loading...');
+  }
+
   // TODO: handle status === ERROR
   return (
     <StyledContainer>
