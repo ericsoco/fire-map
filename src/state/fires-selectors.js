@@ -36,3 +36,24 @@ export function selectCompleteFiresBeforeYearRequest(year) {
     return years;
   };
 }
+
+/**
+ * Returns all fire metadata requests hashed by year.
+ * Note that this selector does not guarantee referential equality,
+ * and so must be used with e.g. a shallow-equals comparator.
+ */
+export function selectAllFireMetadata(years) {
+  return state => {
+    return years.reduce((map, year) => {
+      map[year] = selectFireMetadataForYear(year)(state);
+      return map;
+    }, {});
+  };
+}
+
+/**
+ * Retrieve fire metadata for a specific year.
+ */
+export function selectFireMetadataForYear(year) {
+  return state => state.fires.years[year]?.metadata || null;
+}

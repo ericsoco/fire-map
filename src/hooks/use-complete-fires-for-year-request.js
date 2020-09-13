@@ -10,9 +10,6 @@ import {
 } from '../state/fires-selectors';
 import { isLoaded } from '../utils/request-utils';
 
-// TODO: host in dist and load at runtime rather than this parcel magic
-// Use alias for transformer-raw (specified in .parcelrc),
-// per https://github.com/parcel-bundler/parcel/issues/1080#issuecomment-557240449
 import fires2010 from 'url:~/static/data/fires/2010/California/finalPerimeters.geojson';
 import fires2011 from 'url:~/static/data/fires/2011/California/finalPerimeters.geojson';
 import fires2012 from 'url:~/static/data/fires/2012/California/finalPerimeters.geojson';
