@@ -14,7 +14,6 @@ const chalk = require('chalk');
 const fs = require('fs');
 
 const DEFAULT_SRC = 'static/data/fires';
-const GEOJSON_FILE = /(\.geojson)$/;
 
 main();
 
@@ -125,8 +124,7 @@ function processFiresForStateYear(params, cb) {
     acresPerMonth,
   };
 
-  fs.mkdirSync(`${src}/_meta`, { recursive: true });
-  const outputFile = `${src}/_meta/${state}_${year}.json`;
+  const outputFile = `${src}/${year}/${state}/metadata.json`;
   fs.writeFileSync(outputFile, JSON.stringify(metadata, null, 2));
 
   console.log(chalk.bold(chalk.cyan(`✅ metadata written to ${outputFile}.`)));
