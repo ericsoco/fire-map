@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useDebouncedCallback } from 'use-debounce';
 import PropTypes from 'prop-types';
@@ -202,10 +202,20 @@ function formatDateTick(date) {
 const sliderTicks = buildSliderTicks();
 */
 
-function flattenMetadata(metadataRequests) {
+/**
+ * Flatten metadata across all years into a single array
+ * and process for consumption by simple-bar-chart (@nivo/bar)
+ */
+function processMetadata(metadataRequests) {
   if (!metadataRequests) return [];
   return Object.keys(metadataRequests).reduce(
-    (metadata, year) => metadata.concat(metadataRequests[year].data),
+    (metadata, year) =>
+      metadata.concat(
+        metadataRequests[year].data.acresPerMonth.map((acres, i) => ({
+          date: `${year}-${i}`,
+          value: acres,
+        }))
+      ),
     []
   );
 }
@@ -219,7 +229,8 @@ export default function Slider({ currentDate }) {
   const [sliderValue, setSliderValue] = useState(currentDate.getTime());
   const dispatch = useDispatch();
 
-  const barChartData = flattenMetadata(useFireMetadata());
+  const metadata = useFireMetadata();
+  const barChartData = useMemo(() => processMetadata(metadata), [metadata]);
 
   const [debouncedSetDate] = useDebouncedCallback(value => {
     // console.log('debounced setCurrentDate to value:', value);

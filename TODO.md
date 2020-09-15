@@ -57,8 +57,9 @@
   - [ ] label with notable fires (bigger than X acres, biggest per year, etc)
     - [ ] link labels to zoom map to fire (?)
   - [ ] add bar chart of monthly acres burned
-    - [ ] how to calculate?
-    - [ ] write script to pre-calculate and write to a file; load on init
+    - [x] how to calculate?
+    - [x] write script to pre-calculate and write to a file; load on init
+    - [ ] 2019 not calculated correctly...same issue in other years?
   - stuff from email (diverging bar chart for pre)
 - [ ] other layers
   - [ ] developed area / urban areas (just via basemap?)

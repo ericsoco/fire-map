@@ -6,19 +6,16 @@ import { loadFireMetadataForYear } from '../state/fires-reducer';
 import { selectAllFireMetadata } from '../state/fires-selectors';
 import { LOADED } from '../utils/request-utils';
 
-// TODO: host in dist and load at runtime rather than this parcel magic
-// Use alias for transformer-raw (specified in .parcelrc),
-// per https://github.com/parcel-bundler/parcel/issues/1080#issuecomment-557240449
-import metadata2010 from 'url:~/static/data/fires/2010/California/metadata.json';
-import metadata2011 from 'url:~/static/data/fires/2011/California/metadata.json';
-import metadata2012 from 'url:~/static/data/fires/2012/California/metadata.json';
-import metadata2013 from 'url:~/static/data/fires/2013/California/metadata.json';
-import metadata2014 from 'url:~/static/data/fires/2014/California/metadata.json';
-import metadata2015 from 'url:~/static/data/fires/2015/California/metadata.json';
-import metadata2016 from 'url:~/static/data/fires/2016/California/metadata.json';
-import metadata2017 from 'url:~/static/data/fires/2017/California/metadata.json';
-import metadata2018 from 'url:~/static/data/fires/2018/California/metadata.json';
-import metadata2019 from 'url:~/static/data/fires/2019/California/metadata.json';
+import metadata2010 from 'url:~/static/data/fires/2010/California/metadata.json5';
+import metadata2011 from 'url:~/static/data/fires/2011/California/metadata.json5';
+import metadata2012 from 'url:~/static/data/fires/2012/California/metadata.json5';
+import metadata2013 from 'url:~/static/data/fires/2013/California/metadata.json5';
+import metadata2014 from 'url:~/static/data/fires/2014/California/metadata.json5';
+import metadata2015 from 'url:~/static/data/fires/2015/California/metadata.json5';
+import metadata2016 from 'url:~/static/data/fires/2016/California/metadata.json5';
+import metadata2017 from 'url:~/static/data/fires/2017/California/metadata.json5';
+import metadata2018 from 'url:~/static/data/fires/2018/California/metadata.json5';
+import metadata2019 from 'url:~/static/data/fires/2019/California/metadata.json5';
 
 const METADATA_FOR_YEAR = {
   2010: metadata2010,
@@ -50,15 +47,8 @@ export default function useFireMetadata() {
 
   useEffect(() => {
     years.forEach(year => {
-      console.log(`${year}: `, requests[year]);
       // Request only if not already in-flight
       if (!requests[year]) {
-        console.log('>>>>> requesting metadata for year:', year);
-        console.log('>>>>> axios loading:', METADATA_FOR_YEAR[year]);
-        // TODO NEXT: axios seems to be unable to load; confirmed parcel transforms this differently
-        // as it's JSON instead of geoJSON; it's already parsed at this point.
-        // how to load at runtime instead of parsing directly?
-        // maybe use extension other than json / specify transformer-raw for json?
         dispatch(loadFireMetadataForYear.start({ year }));
         axios(METADATA_FOR_YEAR[year])
           .then(response => {

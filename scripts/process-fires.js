@@ -124,7 +124,9 @@ function processFiresForStateYear(params, cb) {
     acresPerMonth,
   };
 
-  const outputFile = `${src}/${year}/${state}/metadata.json`;
+  // Use json5 extension to enable parcel resolution with transformer-raw;
+  // mapping '.json' to transfomer-raw in .parcelrc doesn't work ¯\_(ツ)_/¯
+  const outputFile = `${src}/${year}/${state}/metadata.json5`;
   fs.writeFileSync(outputFile, JSON.stringify(metadata, null, 2));
 
   console.log(chalk.bold(chalk.cyan(`✅ metadata written to ${outputFile}.`)));
