@@ -99,7 +99,11 @@ function formatFireDate(date) {
   });
 }
 function getFireSizeAcres(perimeter) {
-  return parseInt(perimeter.properties.ACRES || perimeter.properties.GISACRES);
+  return parseInt(
+    perimeter.properties.ACRES ||
+      perimeter.properties.GISACRES ||
+      perimeter.properties.gisAcres
+  );
 }
 /*
 function getFireSizeSqMiles(perimeter, numDigits = 20) {

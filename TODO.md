@@ -59,8 +59,15 @@
   - [ ] add bar chart of monthly acres burned
     - [x] how to calculate?
     - [x] write script to pre-calculate and write to a file; load on init
-    - [ ] 2019 not calculated correctly...same issue in other years?
-  - stuff from email (diverging bar chart for pre)
+    - [x] 2019 not calculated correctly...same issue in other years?
+    - [ ] align bars w/ slider
+    - [ ] finish tooltip / date formatting
+      - [ ] slider hit area blocks bottom part of bar chart
+      - [ ] slice-style tooltip hover; don't require hovering directly on bar
+            NOTE: may want to decouple tooltip interaction from nivo, just implement manually
+    - [ ] verify data against CALFIRE (e.g. https://www.fire.ca.gov/incidents/2018/)
+      - [ ] BUG: current methodology will double-count fires across month boundaries...
+  - stuff from email (diverging bar chart for precip)
 - [ ] other layers
   - [ ] developed area / urban areas (just via basemap?)
   - [ ] rain (data layer, not likely a geo layer)

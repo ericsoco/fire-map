@@ -140,7 +140,9 @@ function getPerimeterSummary(perimeter) {
     perimeter.properties.DATE_ || perimeter.properties.perDatTime
   );
   const acres = parseInt(
-    perimeter.properties.ACRES || perimeter.properties.GISACRES
+    perimeter.properties.ACRES ||
+      perimeter.properties.GISACRES ||
+      perimeter.properties.gisAcres
   );
 
   return name && isFinite(date) && isFinite(acres)
