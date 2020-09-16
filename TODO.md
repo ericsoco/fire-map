@@ -60,6 +60,8 @@
     - [x] how to calculate?
     - [x] write script to pre-calculate and write to a file; load on init
     - [x] 2019 not calculated correctly...same issue in other years?
+    - [ ] just like slider (track / rail), make bars to left of current date solid, bars to right translucent
+    - [ ] refine slider value tooltip styling
     - [ ] align bars w/ slider
     - [ ] finish tooltip / date formatting
       - [ ] slider hit area blocks bottom part of bar chart

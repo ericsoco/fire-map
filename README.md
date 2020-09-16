@@ -29,6 +29,8 @@ yarn merge-all-fires
 yarn process-all-fires
 ```
 
+Alternative: run `yarn prepare-data` to try to run all the above steps automatically. Depending on your internet connection this may take upwards of 20-30 minutes.
+
 ## Running
 
 First, follow the steps above to fetch + process fire perimeter data.

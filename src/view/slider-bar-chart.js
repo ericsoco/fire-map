@@ -4,13 +4,13 @@ import styled from 'styled-components';
 import { ResponsiveBar } from '@nivo/bar';
 
 // import { getPointTooltipProps } from './slider-tooltip';
-
+export const HEIGHT = '3rem';
 const ChartContainer = styled.div`
   position: absolute;
-  bottom: 1rem;
+  top: 0;
   left: 0;
   width: 100%;
-  height: 3rem;
+  height: ${HEIGHT};
 `;
 
 const barProps = {
@@ -61,7 +61,7 @@ const barProps = {
 };
 
 export default function SliderBarChart({ currentDate, data }) {
-  console.log({ currentDate, data });
+  console.log(currentDate);
   // TODO: highlight currentDate
   // TODO: tooltip
   return (
