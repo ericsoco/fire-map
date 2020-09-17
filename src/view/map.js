@@ -11,6 +11,7 @@ import { stateConfigs } from '../constants';
 import useAllFiresForYearRequest from '../hooks/use-all-fires-for-year-request';
 import useCompleteFiresForYearRequest from '../hooks/use-complete-fires-for-year-request';
 import { isLoading, isLoaded } from '../utils/request-utils';
+import { colors } from './style/theme';
 
 import LoadingIcon from './loading-icon';
 
@@ -261,8 +262,8 @@ export default function Map({ currentDate, stateCode }) {
             extruded={false}
             lineWidthScale={20}
             lineWidthMinPixels={2}
-            getFillColor={[255, 80, 60, 100]}
-            getLineColor={[255, 80, 60, 255]}
+            getFillColor={[...colors.FIRE, 100]}
+            getLineColor={[...colors.FIRE, 255]}
             parameters={layerParameters}
             pickable={true}
             onHover={setHoverInfo}
@@ -287,9 +288,9 @@ export default function Map({ currentDate, stateCode }) {
             getFillColor={d => {
               const age = currentDate - getFireDate(d);
               const alpha = age >= 0 ? alphaScale(age) : 0;
-              return [255, 80, 60, alpha];
+              return [...colors.FIRE, alpha];
             }}
-            getLineColor={[255, 80, 60, 255]}
+            getLineColor={[...colors.FIRE, 255]}
             parameters={layerParameters}
             pickable={true}
             onHover={setHoverInfo}
@@ -315,9 +316,9 @@ export default function Map({ currentDate, stateCode }) {
             getFillColor={d => {
               const age = currentDate - getFireDate(d);
               const alpha = age >= 0 ? alphaScale(age) : 0;
-              return [255, 80, 60, alpha];
+              return [...colors.FIRE, alpha];
             }}
-            getLineColor={[255, 80, 60, 255]}
+            getLineColor={[...colors.FIRE, 255]}
             parameters={layerParameters}
             pickable={true}
             onHover={setHoverInfo}

@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { ResponsiveBar } from '@nivo/bar';
 
+import { colors } from './style/theme';
+
 export const HEIGHT = '3rem';
 const ChartContainer = styled.div`
   position: absolute;
@@ -11,15 +13,6 @@ const ChartContainer = styled.div`
   width: 100%;
   height: ${HEIGHT};
 `;
-
-// const StyledTooltip = withStyles(theme => ({
-//   tooltip: {
-//     backgroundColor: theme.palette.common.white,
-//     color: 'rgba(0, 0, 0, 0.87)',
-//     boxShadow: theme.shadows[1],
-//     fontSize: 11,
-//   },
-// }))(MUITooltip);
 
 const barProps = {
   margin: {
@@ -40,7 +33,6 @@ const barProps = {
   minValue: 0,
   maxValue: 'auto',
   padding: 0.1,
-  colors: ['rgb(235, 146, 103)'],
   xScale: {
     type: 'time',
     format: '%m %Y',
@@ -67,17 +59,25 @@ const barProps = {
   },
 };
 
-export default function SliderBarChart({ currentDate, data }) {
-  console.log(currentDate);
-  // TODO: highlight currentDate
+export default function SliderBarChart({ currentIndex, data }) {
   return (
     <ChartContainer>
-      <ResponsiveBar {...barProps} data={data} />
+      <ResponsiveBar
+        {...barProps}
+        data={data}
+        colors={({ index }) =>
+          index - 1 < currentIndex
+            ? `rgba(${colors.SLIDER.join()}, 1)`
+            : index - 1 === currentIndex
+            ? `rgba(${colors.FIRE.join()}, 1)`
+            : `rgba(${colors.SLIDER.join()}, 0.35)`
+        }
+      />
     </ChartContainer>
   );
 }
 
 SliderBarChart.propTypes = {
-  currentDate: PropTypes.instanceOf(Date),
+  currentIndex: PropTypes.number,
   data: PropTypes.arrayOf(PropTypes.shape({ value: PropTypes.number })),
 };

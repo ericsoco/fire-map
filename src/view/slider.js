@@ -20,6 +20,7 @@ import {
 import { selectPlaybackStart } from '../state/ui-selectors';
 import useInterval from '../hooks/use-interval';
 import useFireMetadata from '../hooks/use-fire-metadata';
+import { colors } from './style/theme';
 import SliderBarChart, { HEIGHT as BAR_CHART_HEIGHT } from './slider-bar-chart';
 
 const Container = styled.div`
@@ -55,12 +56,11 @@ const SliderTooltipContent = styled.div`
   }
 `;
 
-const SLIDER_COLOR = [235, 146, 103];
 const SLIDER_TRACK_WIDTH = 2;
 const StyledMUISlider = withStyles({
   root: {
     height: SLIDER_TRACK_WIDTH,
-    color: `rgb(${SLIDER_COLOR.join()})`,
+    color: `rgb(${colors.SLIDER.join()})`,
     padding: `${BAR_CHART_HEIGHT} 0 1rem 0`,
   },
   thumb: {
@@ -75,20 +75,12 @@ const StyledMUISlider = withStyles({
     },
   },
   active: {},
-  valueLabel: {
-    left: 'calc(-50% + 10px)',
-    top: -22,
-    '& *': {
-      background: 'transparent',
-      color: '#000',
-    },
-  },
   mark: {
     height: 2 * SLIDER_TRACK_WIDTH,
     width: 2 * SLIDER_TRACK_WIDTH,
     marginTop: -SLIDER_TRACK_WIDTH,
     borderRadius: 2 * SLIDER_TRACK_WIDTH,
-    border: `1px solid rgb(${SLIDER_COLOR.join()})`,
+    border: `1px solid rgb(${colors.SLIDER.join()})`,
     background: 'none',
   },
   markLabel: {
@@ -101,6 +93,7 @@ const StyledMUISlider = withStyles({
   rail: {
     height: SLIDER_TRACK_WIDTH,
     borderRadius: SLIDER_TRACK_WIDTH,
+    opacity: 0.35,
   },
 })(MUISlider);
 
@@ -154,6 +147,10 @@ const TIME_PER_TICK = 24 * 60 * 60 * 1000;
 // 60 ticks / sec = 1 year every ~6 seconds
 const PLAYBACK_INTERVAL = 33;
 
+function formatBarChartDate(year, month) {
+  return `${year}-${month}`;
+}
+
 /**
  * Flatten metadata across all years into a single array
  * and process for consumption by simple-bar-chart (@nivo/bar)
@@ -164,13 +161,19 @@ function processMetadata(metadataRequests) {
     (metadata, year) =>
       metadata.concat(
         metadataRequests[year].data.acresPerMonth.map((acres, i) => ({
-          date: `${year}-${i}`,
+          date: formatBarChartDate(year, i),
           value: acres,
           ts: new Date(year, i).getTime(),
         }))
       ),
     []
   );
+}
+
+function getCurrentBarIndex(barChartData, ts) {
+  const d = new Date(ts);
+  const dateStr = formatBarChartDate(d.getFullYear(), d.getMonth());
+  return barChartData.findIndex(({ date }) => date === dateStr);
 }
 
 function getAcresForDate(data, ts) {
@@ -184,11 +187,13 @@ function getAcresForDate(data, ts) {
 }
 
 export default function Slider({ currentDate }) {
+  const [isHovered, setIsHovered] = useState(false);
   const [sliderValue, setSliderValue] = useState(currentDate.getTime());
   const dispatch = useDispatch();
 
   const metadata = useFireMetadata();
   const barChartData = useMemo(() => processMetadata(metadata), [metadata]);
+  const currentBarIndex = getCurrentBarIndex(barChartData, sliderValue);
 
   const onSliderChange = (event, value) => {
     // Immediately update slider thumb position and stop playback
@@ -260,8 +265,13 @@ export default function Slider({ currentDate }) {
     return WrappedTooltip;
   }, [barChartData]);
 
+  const showTooltip = playbackStart || isHovered;
+
   return (
-    <Container>
+    <Container
+      onMouseOver={() => setIsHovered(true)}
+      onMouseOut={() => setIsHovered(false)}
+    >
       <Button onClick={onPlayButtonClick}>
         {playbackStart ? (
           <PauseCircleOutlineRounded />
@@ -270,13 +280,13 @@ export default function Slider({ currentDate }) {
         )}
       </Button>
       <SliderContainer>
-        <SliderBarChart data={barChartData} currentDate={currentDate} />
+        <SliderBarChart data={barChartData} currentIndex={currentBarIndex} />
         <StyledMUISlider
           min={DATE_DOMAIN.min.getTime()}
           max={DATE_DOMAIN.max.getTime()}
           marks={ticks}
           value={sliderValue}
-          valueLabelDisplay={'auto'}
+          valueLabelDisplay={showTooltip ? 'on' : 'auto'}
           ValueLabelComponent={MemoizedTooltip}
           onChange={onSliderChange}
           aria-labelledby={'continuous-slider'}
