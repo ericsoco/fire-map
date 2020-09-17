@@ -1,4 +1,4 @@
-# Fire Map: How much of California has burned?
+# The Fires Next Time: A California Wildfire Map
 
 ## Installing
 
@@ -39,3 +39,16 @@ Then, run the application:
 ```
 yarn start
 ```
+
+## Adding data years
+
+The codebase uses Parcel's [tilde path resolution](https://v2.parceljs.org/features/module-resolution/#tilde-paths) to pacakge external data files alongside the bundled application and make them available for runtime XHR loading (via `axios`). These assets exist within `static/data`, and are `import`ed explicitly in hooks:
+
+- `use-all-fires-for-year-request`
+- `use-complete-fires-for-year-request`
+- `use-fire-metadata`
+
+To add a new year of data:
+
+- Add the year to `static/config/fire-data-config.json`
+- `import` the datasets corresponding to the new year in each of the above hooks, and add that import to the `<*>_FOR_YEAR` map below the `import`s.
