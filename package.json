@@ -19,7 +19,9 @@
     "@babel/core": "^7.7.5",
     "@material-ui/core": "^4.8.3",
     "@material-ui/icons": "^4.5.1",
+    "@nivo/bar": "^0.62.0",
     "axios": "^0.19.0",
+    "d3-format": "^2.0.0",
     "d3-scale": "^3.2.1",
     "deck.gl": "^8.0.7",
     "fusion-rpc-redux": "^2.2.1",
@@ -33,8 +35,7 @@
     "redux": "^4.0.4",
     "redux-actions": "^2.6.5",
     "redux-devtools-extension": "^2.13.8",
-    "styled-components": "^4.4.1",
-    "use-debounce": "^3.3.0"
+    "styled-components": "^4.4.1"
   },
   "devDependencies": {
     "@babel/plugin-proposal-optional-chaining": "^7.8.0",
@@ -63,12 +64,16 @@
     "start": "parcel --no-autoinstall index.html 'static/data/fires/*/California/*.geojson'",
     "build": "rm -rf ./dist; parcel build index.html 'static/data/fires/*/California/*.geojson'",
     "deploy": "yarn build && yarn gh-pages -d ./dist",
+    "clean": "rm -rf .parcel-cache",
     "test": "echo \"Error: no test specified\" && exit 1",
     "fetch-fires": "node ./scripts/geoMAC-scraper.js",
     "fetch-all-fires": "node ./scripts/geoMAC-scraper.js static/config/fire-data-config.json",
     "fetch-all-fires:debug": "node --inspect ./scripts/geoMAC-scraper.js static/config/fire-data-config.json",
     "merge-fires": "node ./scripts/merge-fires.js",
-    "merge-all-fires": "node ./scripts/merge-fires.js static/config/fire-data-config.json"
+    "merge-all-fires": "node ./scripts/merge-fires.js static/config/fire-data-config.json",
+    "process-fires": "node ./scripts/process-fires.js",
+    "process-all-fires": "node ./scripts/process-fires.js static/config/fire-data-config.json",
+    "prepare-data": "yarn fetch-all-fires && yarn fetch-all-fires && yarn fetch-all-fires && yarn merge-all-fires && yarn process-all-fires"
   },
   "husky": {
     "hooks": {
