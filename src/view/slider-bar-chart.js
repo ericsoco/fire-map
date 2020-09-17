@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { ResponsiveBar } from '@nivo/bar';
 
-// import { getPointTooltipProps } from './slider-tooltip';
 export const HEIGHT = '3rem';
 const ChartContainer = styled.div`
   position: absolute;
@@ -12,6 +11,15 @@ const ChartContainer = styled.div`
   width: 100%;
   height: ${HEIGHT};
 `;
+
+// const StyledTooltip = withStyles(theme => ({
+//   tooltip: {
+//     backgroundColor: theme.palette.common.white,
+//     color: 'rgba(0, 0, 0, 0.87)',
+//     boxShadow: theme.shadows[1],
+//     fontSize: 11,
+//   },
+// }))(MUITooltip);
 
 const barProps = {
   margin: {
@@ -32,7 +40,6 @@ const barProps = {
   minValue: 0,
   maxValue: 'auto',
   padding: 0.1,
-  isInteractive: true,
   colors: ['rgb(235, 146, 103)'],
   xScale: {
     type: 'time',
@@ -45,31 +52,27 @@ const barProps = {
     min: 0,
     max: 'auto',
   },
-  // theme: {
-  //   tooltip: {
-  //     container: {
-  //       background: rgba(0,0,0,0),
-  //       borderRadius: 0,
-  //       boxShadow: none,
-  //       padding: 0
-  //     }
-  //   }
-  // },
   layout: 'vertical',
   indexBy: 'date',
   keys: ['value'],
+  theme: {
+    tooltip: {
+      container: {
+        background: 'rgba(0,0,0,0)',
+        borderRadius: 0,
+        boxShadow: 'none',
+        padding: 0,
+      },
+    },
+  },
 };
 
 export default function SliderBarChart({ currentDate, data }) {
   console.log(currentDate);
   // TODO: highlight currentDate
-  // TODO: tooltip
   return (
     <ChartContainer>
-      <ResponsiveBar
-        data={data}
-        {...barProps} /*{...getPointTooltipProps()}*/
-      />
+      <ResponsiveBar {...barProps} data={data} />
     </ChartContainer>
   );
 }

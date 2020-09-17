@@ -60,6 +60,16 @@
     - [x] how to calculate?
     - [x] write script to pre-calculate and write to a file; load on init
     - [x] 2019 not calculated correctly...same issue in other years?
+    - [ ] NEXT: fix bar chart / slider interaction:
+      - [ ] create interaction layer / hit area that sits over both bar chart and slider. this layer is a second nivo chart, with all bars full-height but transparent, and handles interaction events.
+        - [ ] fix memoization / metadata selector not ref equal, causing tooltip remounting
+        - [ ] remove debouncing?
+        - [x] tooltips
+              use nivo's tooltip handler, but render tooltips in fixed location (per-bar), below slider track
+              display: - month, year - num acres burned
+        - [x] interaction handlers
+              hover is handled by nivo; have to add handling for mouseDown/Move/Up to set currentDate.
+        - [x] delete slider-tooltip.js and any other cruft
     - [ ] just like slider (track / rail), make bars to left of current date solid, bars to right translucent
     - [ ] refine slider value tooltip styling
     - [ ] align bars w/ slider

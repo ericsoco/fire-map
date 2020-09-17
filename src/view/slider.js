@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { forwardRef, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useDebouncedCallback } from 'use-debounce';
 import PropTypes from 'prop-types';
@@ -40,6 +40,15 @@ const SliderContainer = styled.div`
   position: relative;
   width: 100%;
   margin: 0 1rem -1.5rem 0;
+`;
+
+const SliderTooltipContent = styled.div`
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  p:last-child {
+    padding-top: 0.25rem;
+    font-size: 1rem;
+  }
 `;
 
 const SLIDER_COLOR = [235, 146, 103];
@@ -100,24 +109,6 @@ const StyledTooltip = withStyles(theme => ({
   },
 }))(MUITooltip);
 
-function SliderTooltip({ children, open, value }) {
-  return (
-    <StyledTooltip
-      open={open}
-      enterTouchDelay={0}
-      placement="bottom"
-      title={formatDateTooltip(value)}
-    >
-      {children}
-    </StyledTooltip>
-  );
-}
-SliderTooltip.propTypes = {
-  children: PropTypes.element.isRequired,
-  open: PropTypes.bool.isRequired,
-  value: PropTypes.number.isRequired,
-};
-
 function deriveTicks({ min, max }) {
   let ticks = [];
 
@@ -148,8 +139,7 @@ function formatDateTick(date) {
 function formatDateTooltip(ts) {
   return new Date(ts).toLocaleDateString(undefined, {
     year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+    month: 'long',
   });
 }
 
@@ -170,10 +160,21 @@ function processMetadata(metadataRequests) {
         metadataRequests[year].data.acresPerMonth.map((acres, i) => ({
           date: `${year}-${i}`,
           value: acres,
+          ts: new Date(year, i).getTime(),
         }))
       ),
     []
   );
+}
+
+function getAcresForDate(data, ts) {
+  let i = 0;
+  let datum = data[i++];
+  if (!datum || ts < datum.ts) return null;
+  while (datum && ts > datum.ts) {
+    datum = data[i++];
+  }
+  return datum?.value ? `${datum.value} acres burned` : null;
 }
 
 // TODO: added debouncing to make dynamic loading smoother
@@ -227,6 +228,37 @@ export default function Slider({ currentDate }) {
     : () =>
         dispatch(startPlayback({ date: currentDate, time: performance.now() }));
 
+  // Tooltip component inlined + memoized here to provide access
+  // to barChartData for tooltip generation
+  const MemoizedTooltip = useMemo(() => {
+    const WrappedTooltip = forwardRef(({ children, open, value }, ref) => {
+      const acres = getAcresForDate(barChartData, value);
+      return (
+        <StyledTooltip
+          ref={ref}
+          open={open}
+          enterTouchDelay={0}
+          placement="bottom"
+          title={
+            <SliderTooltipContent>
+              <p>{formatDateTooltip(value)}</p>
+              {acres && <p>{acres}</p>}
+            </SliderTooltipContent>
+          }
+        >
+          {children}
+        </StyledTooltip>
+      );
+    });
+    WrappedTooltip.displayName = 'WrappedTooltip';
+    WrappedTooltip.propTypes = {
+      children: PropTypes.element.isRequired,
+      open: PropTypes.bool.isRequired,
+      value: PropTypes.number.isRequired,
+    };
+    return WrappedTooltip;
+  }, [barChartData]);
+
   return (
     <Container>
       <Button onClick={onPlayButtonClick}>
@@ -244,7 +276,7 @@ export default function Slider({ currentDate }) {
           marks={ticks}
           value={sliderValue}
           valueLabelDisplay={'auto'}
-          ValueLabelComponent={SliderTooltip}
+          ValueLabelComponent={MemoizedTooltip}
           onChange={onSliderChange}
           aria-labelledby={'continuous-slider'}
         />
