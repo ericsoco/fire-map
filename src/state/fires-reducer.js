@@ -66,8 +66,37 @@ const loadCompleteFiresForYearReducer =
     }),
   }) |> reduceOver('years');
 
+export const loadFireMetadataForYear = createRPCActions(
+  'loadFireMetadataForYear'
+);
+const loadFireMetadataForYearReducer =
+  createRPCReducer('loadFireMetadataForYear', {
+    start: (state, { payload: { year } }) => ({
+      ...state,
+      [year]: {
+        ...state[year],
+        metadata: loadingRequest(year),
+      },
+    }),
+    success: (state, { payload: { year, data } }) => ({
+      ...state,
+      [year]: {
+        ...state[year],
+        metadata: loadedRequest(year, data),
+      },
+    }),
+    failure: (state, { payload: { year, error } }) => ({
+      ...state,
+      [year]: {
+        ...state[year],
+        metadata: errorRequest(year, error),
+      },
+    }),
+  }) |> reduceOver('years');
+
 export default reduceReducers(
   null,
   loadAllFiresForYearReducer,
-  loadCompleteFiresForYearReducer
+  loadCompleteFiresForYearReducer,
+  loadFireMetadataForYearReducer
 ) |> reduceOver('fires');

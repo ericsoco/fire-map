@@ -88,5 +88,5 @@ export default function LoadingIcon({ withBackground }) {
 }
 
 LoadingIcon.propTypes = {
-  withBackground: PropTypes.boolean,
+  withBackground: PropTypes.bool,
 };

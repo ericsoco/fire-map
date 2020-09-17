@@ -13,7 +13,36 @@ import theme, { GlobalStyles } from './view/style/theme';
 import App from './view/app';
 import FourOhFour from './view/404';
 
-const store = createStore(rootReducer, ROOT_STATE, devToolsEnhancer());
+const stateSanitizer = state => ({
+  fires: {
+    ...state.fires,
+    years: Object.entries(state.fires.years).reduce((years, [year, value]) => {
+      const sanitizedValue = Object.entries(value).reduce((acc, [k, v]) => {
+        const data = v.data
+          ? Object.keys(v.data).reduce((acc, k) => {
+              acc[k] = `<<BLOB len:${v.data[k].length}>>`;
+              return acc;
+            }, {})
+          : null;
+        acc[k] = {
+          ...v,
+          ...(data ? { data } : {}),
+        };
+        return acc;
+      }, {});
+      years[year] = sanitizedValue;
+      return years;
+    }, {}),
+  },
+});
+
+const store = createStore(
+  rootReducer,
+  ROOT_STATE,
+  devToolsEnhancer({
+    stateSanitizer,
+  })
+);
 
 // Build regex for route matching that
 // whitelists only states present in config

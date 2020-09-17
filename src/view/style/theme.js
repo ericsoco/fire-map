@@ -26,3 +26,8 @@ export default {
   color: 'mediumseagreen',
   mixins,
 };
+
+export const colors = {
+  FIRE: [255, 80, 60],
+  SLIDER: [235, 146, 103],
+};

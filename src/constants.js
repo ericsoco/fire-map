@@ -6,6 +6,13 @@ export const stateConfigs = {
     name: 'California',
     key: 'California',
     mapInit: {
+      longitude: -119.5,
+      latitude: 37.8,
+      zoom: 6,
+      pitch: 0,
+      bearing: 0,
+    },
+    mapInitOblique: {
       longitude: -118.5,
       latitude: 36.8,
       zoom: 6,
