@@ -29,6 +29,8 @@ const METADATA_FOR_YEAR = {
   2018: metadata2018,
   2019: metadata2019,
 };
+const YEARS = Object.keys(METADATA_FOR_YEAR);
+const fireMetadataSelector = selectAllFireMetadata(YEARS);
 
 /**
  * Loads all fire metadata.
@@ -36,17 +38,15 @@ const METADATA_FOR_YEAR = {
  * if all metadata have loaded; else returns null.
  */
 export default function useFireMetadata() {
-  const years = Object.keys(METADATA_FOR_YEAR);
-
   // Retrieve requests for each year, using shallow-equal comparison
   // instead of referential equality, as selectAllFireMetadata
   // creates a map of {year: request} on the fly
-  const requests = useSelector(selectAllFireMetadata(years), shallowEqual);
+  const requests = useSelector(fireMetadataSelector, shallowEqual);
 
   const dispatch = useDispatch();
 
   useEffect(() => {
-    years.forEach(year => {
+    YEARS.forEach(year => {
       // Request only if not already in-flight
       if (!requests[year]) {
         dispatch(loadFireMetadataForYear.start({ year }));
@@ -64,7 +64,7 @@ export default function useFireMetadata() {
           });
       }
     });
-  }, [dispatch, years, requests]);
+  }, [dispatch, requests]);
 
   return Object.values(requests).every(req => req?.status === LOADED)
     ? requests

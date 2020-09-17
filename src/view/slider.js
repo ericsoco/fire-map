@@ -1,7 +1,7 @@
 import React, { forwardRef, useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useDebouncedCallback } from 'use-debounce';
 import PropTypes from 'prop-types';
+import { useDispatch, useSelector } from 'react-redux';
+import { format } from 'd3-format';
 import MUISlider from '@material-ui/core/slider';
 import {
   PauseCircleOutlineRounded,
@@ -48,6 +48,10 @@ const SliderTooltipContent = styled.div`
   p:last-child {
     padding-top: 0.25rem;
     font-size: 1rem;
+  }
+  span {
+    font-weight: bold;
+    margin-right: 0.25rem;
   }
 `;
 
@@ -143,6 +147,8 @@ function formatDateTooltip(ts) {
   });
 }
 
+const formatAcres = format('.2s');
+
 // One day per tick
 const TIME_PER_TICK = 24 * 60 * 60 * 1000;
 // 60 ticks / sec = 1 year every ~6 seconds
@@ -174,14 +180,9 @@ function getAcresForDate(data, ts) {
   while (datum && ts > datum.ts) {
     datum = data[i++];
   }
-  return datum?.value ? `${datum.value} acres burned` : null;
+  return datum?.value ? formatAcres(datum.value) : null;
 }
 
-// TODO: added debouncing to make dynamic loading smoother
-// and avoid unnecessary/duplicate requests. but...
-// i don't think there's actually a risk of that,
-// and more responsive UI calls for removing debounce.
-// Give that a shot and see how it feels.
 export default function Slider({ currentDate }) {
   const [sliderValue, setSliderValue] = useState(currentDate.getTime());
   const dispatch = useDispatch();
@@ -189,16 +190,11 @@ export default function Slider({ currentDate }) {
   const metadata = useFireMetadata();
   const barChartData = useMemo(() => processMetadata(metadata), [metadata]);
 
-  const [debouncedSetDate] = useDebouncedCallback(value => {
-    // console.log('debounced setCurrentDate to value:', value);
-    dispatch(setCurrentDate(value));
-  }, 1);
   const onSliderChange = (event, value) => {
     // Immediately update slider thumb position and stop playback
     setSliderValue(value);
     dispatch(stopPlayback());
-    // Update currentDate on a debounce
-    debouncedSetDate(new Date(value));
+    dispatch(setCurrentDate(new Date(value)));
   };
 
   // TODO: abstract this into its own component / hook
@@ -242,7 +238,12 @@ export default function Slider({ currentDate }) {
           title={
             <SliderTooltipContent>
               <p>{formatDateTooltip(value)}</p>
-              {acres && <p>{acres}</p>}
+              {acres && (
+                <p>
+                  <span>{acres}</span>
+                  {'acres 🔥'}
+                </p>
+              )}
             </SliderTooltipContent>
           }
         >
