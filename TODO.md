@@ -111,6 +111,7 @@
 
 ## Data
 - [ ] get 2020 data (fuck 2020.)
+- [ ] 2015 data times out without a `latest='Y'` filter, which means we can't currently animate 2015 fires. Is there a different filter that will work, or do we have to paginate on date and then concatenate results? (ugh.)
 - [X] switch data source from GeoMAC to NIFC
       https://data-nifc.opendata.arcgis.com/
   - Historic GeoMAC perimeters 2000 - 2019:

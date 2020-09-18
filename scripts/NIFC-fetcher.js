@@ -1,13 +1,12 @@
 /**
- * Geospatial Multi-Agency Coordination (GeoMAC -- https://www.geomac.gov/)
- * hosts US wildfire perimeter data back through 2010, but offers it only
- * as an HTML file index. This file scrapes the GeoMAC site given specified
- * filters, looking for .shp + .dbf + .prj shapefile bundles.
+ * The National Interagency Fire Center's Wildland Fire Open Data project
+ * (https://data-nifc.opendata.arcgis.com/) hosts an API
+ * for fetching wildfire perimeter data.
  *
  * ## Usage
  * ### Fetch fires for a specific state + year:
  * `yarn fetch-fires <year> <state> [dest]`
- * E.g. `yarn fetch-fires 2018 California static/data/fires`
+ * E.g. `yarn fetch-fires 2018 CA static/data/fires`
  * ### Fetch all fires described by config:
  * `yarn fetch-fires <configPath> [dest]`
  * E.g. `yarn fetch-fires static/config/fetch-fire-data-config static/data/fires`
@@ -19,7 +18,6 @@ const querystring = require('query-string');
 const arcgisUtils = require('@esri/arcgis-to-geojson-utils');
 const simplify = require('@turf/simplify');
 
-const REPROCESS_WITHOUT_DOWNLOAD = false;
 const DEFAULT_DEST = 'static/data/fires';
 const ARCGIS_FILENAME = 'arcgis.json';
 const RAW_GEOJSON_FILENAME = 'rawPerimeters.geojson';
@@ -28,7 +26,8 @@ const FINAL_PERIMETERS_FILENAME = 'finalPerimeters.geojson';
 
 // Perimeters smaller than this are filtered out of final output
 const MIN_ACRES = 100;
-const SIMPLIFY_AMOUNT = 0.0003;
+const SIMPLIFY_AMOUNT = 0.001;
+const REPROCESS_WITHOUT_DOWNLOAD = false;
 
 const BASE_PATH =
   'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services';
@@ -47,13 +46,25 @@ const ORDER_BY_FIELDS = ['incidentname', 'perimeterdatetime'];
 function getURL({ year, state }) {
   const path = `${BASE_PATH}/${LAYER_NAME_PREFIX}${year}/${QUERY_PREFIX}`;
   const query = querystring.stringify({
-    where: `state = '${state}'`,
+    where: `state = '${state}'${maybeApplyFilter({ year, state })}`,
     outFields: SELECT_FIELDS.join(),
     orderByFields: ORDER_BY_FIELDS.join(),
     outSR: '4326',
     f: 'json',
   });
   return `${path}?${query}`;
+}
+
+const ADDITIONAL_FILTERS = [
+  // `gisacres >= 100`,
+  // `gisacres <= 99999999`,
+  `latest = 'Y'`,
+];
+function maybeApplyFilter({ year, state }) {
+  // CA/2015 times out without additional filters
+  return year === '2015' && state === 'CA'
+    ? ADDITIONAL_FILTERS.map(f => ` AND ${f}`).join('')
+    : '';
 }
 
 main();
