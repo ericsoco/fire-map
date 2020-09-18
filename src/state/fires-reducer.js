@@ -12,6 +12,30 @@ export const INITIAL_STATE = {
   years: {},
 };
 
+export function getFireDate(fire) {
+  // GeoMAC props:
+  // - DATE_
+  // - perDatTime
+  return fire.properties.perimeterdatetime
+    ? new Date(fire.properties.perimeterdatetime)
+    : null;
+}
+
+export function getFireName(fire) {
+  // GeoMAC props:
+  // - FIRE_NAME
+  // - fireName
+  return fire.properties.incidentname;
+}
+
+export function getFireAcres(fire) {
+  // GeoMAC props:
+  // - ACRES
+  // - GISACRES
+  // - gisAcres
+  return parseInt(fire.properties.gisacres);
+}
+
 export const loadAllFiresForYear = createRPCActions('loadAllFiresForYear');
 const loadAllFiresForYearReducer =
   createRPCReducer('loadAllFiresForYear', {

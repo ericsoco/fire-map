@@ -58,7 +58,7 @@ function processFiresPerConfig(config, src) {
   // in order to serially fetch them
   let stateYears = config.states.reduce(
     (acc, state) =>
-      acc.concat(state.years.map(year => ({ state: state.code, year }))),
+      acc.concat(state.years.map(year => ({ state: state.name, year }))),
     []
   );
 
@@ -81,10 +81,10 @@ function processFiresForStateYear(params, cb) {
   );
   const { src, year, state } = params;
   const path = `${src}/${year}/${state}`;
-  const filepath = `${path}/finalPerimeters.geojson`;
-  let finalPerimeters;
+  const filepath = `${path}/allPerimeters.geojson`;
+  let allPerimeters;
   try {
-    finalPerimeters = JSON.parse(fs.readFileSync(filepath), 'utf8');
+    allPerimeters = JSON.parse(fs.readFileSync(filepath), 'utf8');
   } catch (error) {
     logError(`❌ Error reading ${filepath}: ${error.message}`);
     return;
@@ -92,7 +92,7 @@ function processFiresForStateYear(params, cb) {
 
   // generate array of months, each element containing a map of perimeter summaries
   // ({ name, lastDate, acres }) by perimeter name
-  const acresPerPerimeterPerMonth = finalPerimeters.features.reduce(
+  const acresPerPerimeterPerMonth = allPerimeters.features.reduce(
     (months, perimeter) => {
       const perimeterSummary = getPerimeterSummary(perimeter);
       if (!perimeterSummary) return months;
@@ -135,9 +135,15 @@ function processFiresForStateYear(params, cb) {
 }
 
 function getPerimeterSummary(perimeter) {
-  const name = perimeter.properties.incidentname;
-  const date = new Date(perimeter.properties.perimeterdatetime);
-  const acres = parseInt(perimeter.properties.gisacres);
+  const name = perimeter.properties.FIRE_NAME || perimeter.properties.fireName;
+  const date = new Date(
+    perimeter.properties.DATE_ || perimeter.properties.perDatTime
+  );
+  const acres = parseInt(
+    perimeter.properties.ACRES ||
+      perimeter.properties.GISACRES ||
+      perimeter.properties.gisAcres
+  );
 
   return name && isFinite(date) && isFinite(acres)
     ? {

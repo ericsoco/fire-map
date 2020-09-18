@@ -10,6 +10,7 @@ import styled from 'styled-components';
 import { stateConfigs } from '../constants';
 import useAllFiresForYearRequest from '../hooks/use-all-fires-for-year-request';
 import useCompleteFiresForYearRequest from '../hooks/use-complete-fires-for-year-request';
+import { getFireAcres, getFireDate, getFireName } from '../state/fires-reducer';
 import { isLoading, isLoaded } from '../utils/request-utils';
 import { colors } from './style/theme';
 
@@ -72,8 +73,8 @@ const alphaScale = scalePow()
   .clamp(true)
   .exponent(0.5);
 
-function getFireName(perimeter) {
-  const name = perimeter.properties.FIRE_NAME || perimeter.properties.fireName;
+function getFireDisplayName(perimeter) {
+  const name = getFireName(perimeter);
   return (name || '')
     .split(' ')
     .map(
@@ -81,17 +82,6 @@ function getFireName(perimeter) {
     )
     .join(' ');
 }
-function getFireDate(perimeter) {
-  // TODO: validate date strings
-  return new Date(
-    perimeter.properties.DATE_ || perimeter.properties.perDatTime
-  );
-}
-/*
-function getFireDateRange(perimeter, data) {
-  // TODO: implement
-}
-*/
 function formatFireDate(date) {
   return date.toLocaleDateString('en-US', {
     month: 'long',
@@ -99,21 +89,6 @@ function formatFireDate(date) {
     year: 'numeric',
   });
 }
-function getFireSizeAcres(perimeter) {
-  return parseInt(
-    perimeter.properties.ACRES ||
-      perimeter.properties.GISACRES ||
-      perimeter.properties.gisAcres
-  );
-}
-/*
-function getFireSizeSqMiles(perimeter, numDigits = 20) {
-  return (
-    parseFloat(perimeter.properties.ACRES || perimeter.properties.GISACRES) /
-    640
-  ).toFixed(numDigits);
-}
-*/
 function getInitialViewState(stateCode) {
   return stateConfigs[stateCode].mapInit;
 }
@@ -151,6 +126,8 @@ function writeData(firesRequests, destGeoJSON, setData) {
 /**
  * Extract only the latest perimeter of each fire,
  * and flatten results into a features array
+ * TODO: why does this function exist in runtime,
+ * when we already preprocess this??
  */
 function extractLatestPerimeters(allFiresRequest, currentDate) {
   if (!isLoaded(allFiresRequest)) {
@@ -160,8 +137,8 @@ function extractLatestPerimeters(allFiresRequest, currentDate) {
   const latestPerimeters = Object.keys(allFiresRequest.data).reduce(
     (lastPerimeters, name) => {
       const latestPerimeterForFire = allFiresRequest.data[name].find(d => {
-        const dateStr = d.properties.DATE_ || d.properties.perDatTime;
-        return dateStr && new Date(dateStr) <= currentDate;
+        const date = getFireDate(d);
+        return date && date <= currentDate;
       });
       if (latestPerimeterForFire) {
         lastPerimeters.push(latestPerimeterForFire);
@@ -188,9 +165,9 @@ function renderTooltip(hoverInfo) {
   const date = getFireDate(object);
   return (
     <Tooltip left={x} top={y}>
-      <FireName>{getFireName(object)}</FireName>
+      <FireName>{getFireDisplayName(object)}</FireName>
       {date && <FireDate>{formatFireDate(date)}</FireDate>}
-      <FireSize>{`${getFireSizeAcres(object)} acres`}</FireSize>
+      <FireSize>{`${getFireAcres(object)} acres`}</FireSize>
     </Tooltip>
   );
 }

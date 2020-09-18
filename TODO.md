@@ -1,7 +1,8 @@
 # TODO
 
-## Current next steps:
+## Overview
 - [ ] 2020 data
+- [X] switch data source from GeoMAC to NIFC
 - [ ] data loading strategy
 - [ ] design
 - [ ] deploy, get feedback
@@ -22,6 +23,7 @@
         but still end up with very heavy (10+MB) merged files.
         may need to consider other strategies...
   - [ ] load (serially?) in the background after app init
+        NOTE: use-complete-fires already does this, only it loads backwards from selected date...
   - [X] ohhh wait, each fire folder has multiple perimeters per fire.
         don't have that in merged fires :/
         looks like we are going to have to load all geojsons for each fire,
@@ -43,7 +45,7 @@
   - [ ] align bars w/ slider
       (requires fixing 2020 data)
   - [ ] verify data against CALFIRE (e.g. https://www.fire.ca.gov/incidents/2018/)
-    - [ ] BUG: current methodology will double-count fires across month boundaries...
+    - [ ] now using final perimeters to determine acres / month; a better solution would be to check last month's perimeters against this month and subtract to calculate differential per perimeter across month boundaries.
   - [ ] tooltip: use 🔥 emoji to indicate relative amount of fire, either with number of chars or font size
   - [ ] label with notable fires (megafires (> 100k acres), biggest per year, etc)
     - [ ] link labels to zoom map + slider to fire (?)
@@ -109,24 +111,43 @@
 
 ## Data
 - [ ] get 2020 data (fuck 2020.)
-- [ ] invalid data
+- [ ] 2015 data times out without a `latest='Y'` filter, which means we can't currently animate 2015 fires. Is there a different filter that will work, or do we have to paginate on date and then concatenate results? (ugh.)
+- [X] switch data source from GeoMAC to NIFC
+      https://data-nifc.opendata.arcgis.com/
+  - Historic GeoMAC perimeters 2000 - 2019:
+    https://data-nifc.opendata.arcgis.com/datasets/historic-geomac-perimeters-2000/
+    thru
+    https://data-nifc.opendata.arcgis.com/datasets/historic-geomac-perimeters-2019/
+  - GeoMAC final perimeters 2000 - 2018:
+    https://data-nifc.opendata.arcgis.com/datasets/historic-geomac-perimeters-combined-2000-2018/
+  - Interagency fire perims 1800s - 2018
+    https://data-nifc.opendata.arcgis.com/datasets/interagency-fire-perimeter-history-all-years
+  - More recent (2020/19, as of 9/17/2020) perimeters, with updates;
+    can get pretty current, and daily, perimeters here:
+    https://data-nifc.opendata.arcgis.com/datasets/archived-wildfire-perimeters-2
+    - [X] update scraper to hit API URL:
+      https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/Historic_Geomac_Perimeters_2000/FeatureServer/0/query?where=1%3D1&outFields=gisacres,incidentname,state,perimeterdatetime,fireyear,latest,uniquefireidentifier&outSR=4326&f=json
+      Can use same query params for each year, 2000 - 2019.
+    - [X] do some filtering to clear our bad values and fires < X (100?) acres.
+          can review datasets on web to get a sense of data distribution and where filters should be set.
+- [X] invalid data
       how best to handle? prob want to remove perimeters with "geometry": null
       in data processing step, but this is non-trivial as data processing deals
       with files, without peeking into their contents.
-  - [ ] 2012 has bad value(s) -- ??
-  - [ ] Brannan (2014) has `null` geometry
-  - [ ] Gasquet Complex (2015) has `null` geometry
-  - [ ] Cabin (2017) has `null` geometry
-- [ ] OOB data:
-  - [ ] Halstead (2012)
-  - [ ] Hay Canyon (2015)
-  - [ ] China Cap (2014)
-- [ ] scraper
-  - [ ] only report 'All data fetched' when actually done
-  - [ ] retry failed downloads
-  - [ ] refactor to focus on generating one merged file / year
-  - [ ] consider making one all-year/all-fires file at low-res (high simplification),
-        to display on site init
+      -> Solved by using NIFC data instead of GeoMAC
+  - [X] 2012 has bad value(s) -- ??
+  - [X] Brannan (2014) has `null` geometry
+  - [X] Gasquet Complex (2015) has `null` geometry
+  - [X] Cabin (2017) has `null` geometry
+  - [X] OOB data:
+    - [X] Halstead (2012)
+    - [X] Hay Canyon (2015)
+    - [X] China Cap (2014)
+  - [X] scraper
+    - [X] only report 'All data fetched' when actually done
+    - [X] retry failed downloads
+    - [X] refactor to focus on generating one merged file / year
+    - [X] consider making one all-year/all-fires file at low-res (high simplification), to display on site init
   - [X] fix mapshaper 'Command expects a single value' error
 
 
@@ -134,6 +155,7 @@
 - [ ] title + slider disappear while LoadingIcon visible
 - [ ] 2020 data not scraping correctly
   - [ ] bar chart doesn't align with slider
+- [ ] Can we remove `extractLatestPerimeters` and use preprocessed finalPerimeters instead?
 
 
 ## RFP / DONE
