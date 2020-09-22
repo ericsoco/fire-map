@@ -15,6 +15,7 @@ const axios = require('axios');
 const chalk = require('chalk');
 const fs = require('fs');
 const querystring = require('query-string');
+const { argv } = require('yargs');
 const arcgisUtils = require('@esri/arcgis-to-geojson-utils');
 const simplify = require('@turf/simplify');
 
@@ -23,11 +24,6 @@ const ARCGIS_FILENAME = 'arcgis.json';
 const RAW_GEOJSON_FILENAME = 'rawPerimeters.geojson';
 const ALL_PERIMETERS_FILENAME = 'allPerimeters.geojson';
 const FINAL_PERIMETERS_FILENAME = 'finalPerimeters.geojson';
-
-// Perimeters smaller than this are filtered out of final output
-const MIN_ACRES = 100;
-const SIMPLIFY_AMOUNT = 0.001;
-const REPROCESS_WITHOUT_DOWNLOAD = false;
 
 const BASE_PATH =
   'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services';
@@ -70,19 +66,22 @@ function maybeApplyFilter({ year, state }) {
 main();
 
 async function main() {
-  const config = getConfig(process.argv[2]);
+  const params = {
+    config: getConfig(argv.config),
+    year: argv.year,
+    state: argv.state,
+    dest: argv.dest || DEFAULT_DEST,
+    // Perimeters smaller than this are filtered out of final output
+    acres: argv.acres || 100,
+    simplify: argv.simplify || 0.001,
+    reprocess: argv.reprocess || false,
+  };
 
-  if (config) {
+  if (params.config) {
     // Fetch all fires described by config
-    const dest = process.argv[3] || DEFAULT_DEST;
-    await fetchFiresPerConfig(config, dest);
+    await fetchFiresPerConfig(params);
   } else {
     // Fetch fires for a specific year
-    const params = {
-      year: process.argv[2],
-      state: process.argv[3],
-      dest: process.argv[4] || DEFAULT_DEST,
-    };
     await fetchFiresForStateYear(params);
   }
 }
@@ -99,7 +98,8 @@ function getConfig(maybeConfig) {
   return false;
 }
 
-async function fetchFiresPerConfig(config, dest) {
+async function fetchFiresPerConfig(params) {
+  const { config } = params;
   // Create flattened list of all state + year pairs,
   // in order to serially fetch them
   let stateYears = config.states.reduce(
@@ -111,7 +111,7 @@ async function fetchFiresPerConfig(config, dest) {
   async function next() {
     if (stateYears.length) {
       const stateYear = stateYears.shift();
-      await fetchFiresForStateYear({ ...stateYear, dest });
+      await fetchFiresForStateYear({ ...params, ...stateYear });
       next();
     } else {
       console.log(chalk.bold(chalk.cyan(`✅ All data fetched.`)));
@@ -123,9 +123,8 @@ async function fetchFiresPerConfig(config, dest) {
 
 async function fetchFiresForStateYear(params) {
   const url = getURL(params);
-  console.log(chalk.bold(`☁️  fetching from: ${url}`));
 
-  const { dest, year, state } = params;
+  const { dest, year, state, reprocess } = params;
   const destPath = `${dest}/${year}/${state}`;
   console.log(chalk.bold(`⬇️  destination path: ${destPath}`));
 
@@ -140,7 +139,7 @@ async function fetchFiresForStateYear(params) {
     );
   }
 
-  if (!REPROCESS_WITHOUT_DOWNLOAD) {
+  if (!reprocess) {
     try {
       await downloadArcGIS(url, destPath);
     } catch (err) {
@@ -163,13 +162,14 @@ async function fetchFiresForStateYear(params) {
     const geojson = arcgisUtils.arcgisToGeoJSON(JSON.parse(arcgis));
     const parsedGeojson = JSON.stringify(geojson, null, 2);
     fs.writeFileSync(`${destPath}/${RAW_GEOJSON_FILENAME}`, parsedGeojson);
-    processPerimeters(destPath, geojson);
+    processPerimeters(destPath, geojson, params);
   } catch (err) {
     logError(err);
   }
 }
 
 async function downloadArcGIS(url, destPath) {
+  console.log(chalk.bold(`☁️  fetching from: ${url}`));
   const arcgisDestPath = `${destPath}/${ARCGIS_FILENAME}`;
   const writer = fs.createWriteStream(arcgisDestPath);
   const response = await axios({
@@ -205,12 +205,12 @@ function logError(error) {
  * - merging back into single FeatureCollection
  * Therefore, just applying a fixed simplification for each collection for now.
  */
-function processPerimeters(folder, mutableGeojson) {
+function processPerimeters(folder, mutableGeojson, params) {
   mutableGeojson.features = mutableGeojson.features.filter(
-    f => Boolean(f.geometry) && f.properties.gisacres > MIN_ACRES
+    f => Boolean(f.geometry) && f.properties.gisacres > params.acres
   );
   simplify(mutableGeojson, {
-    tolerance: SIMPLIFY_AMOUNT,
+    tolerance: params.simplify,
     highQuality: true,
     mutate: true,
   });
@@ -229,6 +229,6 @@ function processPerimeters(folder, mutableGeojson) {
   fs.writeFileSync(`${folder}/${FINAL_PERIMETERS_FILENAME}`, finalGeojson);
 
   console.info(
-    `🗜 Wrote final perimeters to ${folder}/${ALL_PERIMETERS_FILENAME}`
+    `💾 Wrote final perimeters to ${folder}/${ALL_PERIMETERS_FILENAME}`
   );
 }

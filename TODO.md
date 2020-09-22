@@ -1,8 +1,8 @@
 # TODO
 
 ## Overview
-- [ ] 2020 data
 - [X] switch data source from GeoMAC to NIFC
+- [ ] 2020 data (? - or wait until available as historical data?)
 - [ ] data loading strategy
 - [ ] design
 - [ ] deploy, get feedback

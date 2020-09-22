@@ -29,7 +29,7 @@ yarn fetch-all-fires
 **1a.** Fetch fires for a specific state + year if necessary for backfilling / debugging:
 
 ```
-yarn fetch-fires 2018 CA
+yarn fetch-fires --year=2018 --state=CA
 ```
 
 **2.** Process metadata for fire perimeters:
@@ -41,7 +41,7 @@ yarn process-all-fires
 **2a.** Process fires for a specific state + year if necessary for backfilling / debugging:
 
 ```
-yarn process-fires 2018 CA
+yarn process-fires --year=2018 --state=CA
 ```
 
 ### Deprecated: GeoMAC data prep

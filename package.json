@@ -59,7 +59,8 @@
     "mkdirp": "^0.5.1",
     "parcel": "^2.0.0-beta.1",
     "prettier": "^1.19.1",
-    "query-string": "^6.13.2"
+    "query-string": "^6.13.2",
+    "yargs": "^16.0.3"
   },
   "scripts": {
     "lint": "eslint src",
@@ -70,7 +71,8 @@
     "clean": "rm -rf .parcel-cache",
     "test": "echo \"Error: no test specified\" && exit 1",
     "fetch-fires": "node ./scripts/NIFC-fetcher.js",
-    "fetch-all-fires": "node ./scripts/NIFC-fetcher.js static/config/fire-data-config.json",
+    "fetch-all-fires": "node ./scripts/NIFC-fetcher.js --config=static/config/fire-data-config.json",
+    "reprocess-all-fires": "node ./scripts/NIFC-fetcher.js --config=static/config/fire-data-config.json --reprocess=true",
     "process-fires": "node ./scripts/process-fires.js",
     "process-all-fires": "node ./scripts/process-fires.js static/config/fire-data-config.json",
     "prepare-data": "yarn fetch-all-fires && yarn process-all-fires",
