@@ -124,6 +124,7 @@ function deriveTicks({ min, max }) {
   return ticks;
 }
 const ticks = deriveTicks(DATE_DOMAIN);
+const step = 24 * 60 * 60 * 1000;
 
 function formatDateTick(date) {
   return date.getMonth() === 0
@@ -285,6 +286,7 @@ export default function Slider({ currentDate }) {
           min={DATE_DOMAIN.min.getTime()}
           max={DATE_DOMAIN.max.getTime()}
           marks={ticks}
+          step={step}
           value={sliderValue}
           valueLabelDisplay={showTooltip ? 'on' : 'auto'}
           ValueLabelComponent={MemoizedTooltip}
