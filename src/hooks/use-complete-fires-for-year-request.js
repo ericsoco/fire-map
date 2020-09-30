@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 
 import { loadCompleteFiresForYear } from '../state/fires-reducer';
 import {
-  selectCompleteFiresRequests,
-  selectCompleteFiresBeforeYearRequest,
+  selectAllFires,
   selectCompleteFiresForYearRequest,
 } from '../state/fires-selectors';
 import { isLoaded } from '../utils/request-utils';
@@ -83,16 +82,47 @@ export default function useCompleteFiresForYearRequest(selectedYear) {
   const queuedYearRequest = useSelector(
     selectCompleteFiresForYearRequest(queuedYear)
   );
+  const allFireRequests = useSelector(selectAllFires());
+
+  // Note: this was a selector, but couldn't get memoization working,
+  // so moved it to a useMemo hook here.
+  const allCompleteRequests = useMemo(
+    () =>
+      Object.keys(allFireRequests).reduce(
+        (completeFires, year) => ({
+          ...completeFires,
+          [year]: allFireRequests[year].complete,
+        }),
+        {}
+      ),
+    [allFireRequests]
+  );
+
+  // Retrieve all fires from the specified year back to the first empty year,
+  // whether due to not-yet-loaded data or the beginning of the available data,
+  // arranged in chronological order.
+  // Note: this was a selector, but couldn't get memoization working,
+  // so moved it to a useMemo hook here.
+  const priorYearRequests = useMemo(() => {
+    const getRequest = year => allCompleteRequests[year] || null;
+    let nextYear = selectedYear - 1;
+    let years = [];
+    let request;
+    while ((request = getRequest(nextYear)) !== null) {
+      years.unshift(request);
+      nextYear--;
+    }
+    return years;
+  }, [allCompleteRequests, selectedYear]);
+  console.log(priorYearRequests.map(({ request }) => request));
+
   const readyForNext = isLoaded(selectedYearRequest) && queuedYear;
   const request = readyForNext ? queuedYearRequest : selectedYearRequest;
   const year = readyForNext ? queuedYear : selectedYear;
 
   // If a previous year has not yet been loaded,
   // queue it for load after this year
-  const nextRequest = getNextRequest(
-    year,
-    useSelector(selectCompleteFiresRequests())
-  );
+  const nextRequest = getNextRequest(year, allCompleteRequests);
 
   const firesForYear = FIRES_FOR_YEAR[year];
   const dispatch = useDispatch();
@@ -125,9 +155,7 @@ export default function useCompleteFiresForYearRequest(selectedYear) {
   // Return the request for the currently-selected year;
   // also return previous years as they resolve in the background.
   return {
-    selectedYearRequest: selectedYearRequest,
-    priorYearRequests: useSelector(
-      selectCompleteFiresBeforeYearRequest(selectedYear)
-    ),
+    selectedYearRequest,
+    priorYearRequests,
   };
 }

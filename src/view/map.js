@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from '@deck.gl/layers';
@@ -94,42 +94,25 @@ function getInitialViewState(stateCode) {
 }
 
 /**
- * Flatten multiple GeoJSON requests into a single FeatureCollection,
- * setting data to a new object when data have changed,
- * else passing through the previous object to maintaining strict equality
- * to benefit deck.gl rendering performance.
- *
- * TODO: this is not right...
- * makes sense to memoize, but there's no need for the extra render
- * caused by the setData() call. change this to a more standard
- * memoization strategy (useMemo perhaps?) with memo condition being
- * the number of features.
+ * Flatten multiple GeoJSON requests into a single FeatureCollection
  */
-function writeData(firesRequests, destGeoJSON, setData) {
+function flattenPerimeters(firesRequests) {
   const features = firesRequests
     .filter(isLoaded)
     .map(request => request.data.features)
     .reduce((values, array) => [...values, ...array], []);
 
-  // If number of features has changed, force an update
-  // by setting the data to a new object
-  if (features.length !== destGeoJSON.features.length) {
-    setData({
-      type: 'FeatureCollection',
-      features,
-    });
-  }
-
-  return destGeoJSON;
+  return {
+    type: 'FeatureCollection',
+    features,
+  };
 }
 
 /**
- * Extract only the latest perimeter of each fire,
- * and flatten results into a features array
- * TODO: why does this function exist in runtime,
- * when we already preprocess this??
+ * Extract only the latest (relative to currentTime) perimeter
+ * of each fire, and flatten results into a features array
  */
-function extractLatestPerimeters(allFiresRequest, currentDate) {
+function extractLatestPerimeters(allFiresRequest, currentTime) {
   if (!isLoaded(allFiresRequest)) {
     return allFiresRequest;
   }
@@ -138,7 +121,7 @@ function extractLatestPerimeters(allFiresRequest, currentDate) {
     (lastPerimeters, name) => {
       const latestPerimeterForFire = allFiresRequest.data[name].find(d => {
         const date = getFireDate(d);
-        return date && date <= currentDate;
+        return date && date <= currentTime;
       });
       if (latestPerimeterForFire) {
         lastPerimeters.push(latestPerimeterForFire);
@@ -177,38 +160,47 @@ export default function Map({ currentDate, stateCode }) {
   const [viewState, setViewState] = useState(initialViewState);
   const [hoverInfo, setHoverInfo] = useState(null);
 
-  const [priorYearsData, setPriorYearsData] = useState({
-    type: 'FeatureCollection',
-    features: [],
-  });
-  const [previousYearData, setPreviousYearData] = useState({
-    type: 'FeatureCollection',
-    features: [],
-  });
-  const [currentYearData, setCurrentYearData] = useState({
-    type: 'FeatureCollection',
-    features: [],
-  });
+  // const [priorYearsData, setPriorYearsData] = useState({
+  //   type: 'FeatureCollection',
+  //   features: [],
+  // });
+  // const [previousYearData, setPreviousYearData] = useState({
+  //   type: 'FeatureCollection',
+  //   features: [],
+  // });
+  // const [currentYearData, setCurrentYearData] = useState({
+  //   type: 'FeatureCollection',
+  //   features: [],
+  // });
 
-  const allFiresForYearRequest = useAllFiresForYearRequest(
-    currentDate.getFullYear()
-  );
-  const { priorYearRequests } = useCompleteFiresForYearRequest(
-    currentDate.getFullYear()
-  );
+  const year = currentDate.getFullYear();
+  const time = currentDate.getTime();
+
+  const allFiresForYearRequest = useAllFiresForYearRequest(year);
+  const { priorYearRequests } = useCompleteFiresForYearRequest(year);
   const previousYearRequest = priorYearRequests.pop();
 
-  writeData(priorYearRequests, priorYearsData, setPriorYearsData);
-  writeData(
-    previousYearRequest ? [previousYearRequest] : [],
-    previousYearData,
-    setPreviousYearData
-  );
-  writeData(
-    [extractLatestPerimeters(allFiresForYearRequest, currentDate)],
-    currentYearData,
-    setCurrentYearData
-  );
+  const priorYearsData = useMemo(() => {
+    console.log('>>>>> calc priorYearsData');
+    return flattenPerimeters(priorYearRequests);
+    // TODO: ensure referential equality on priorYearRequests
+    // when derived from same `year`, else use only `year` as dep
+  }, [priorYearRequests]);
+
+  const previousYearData = useMemo(() => {
+    console.log('>>>>> calc previousYearData');
+    // TODO: I think this is memoizing as expected
+    return flattenPerimeters(previousYearRequest ? [previousYearRequest] : []);
+  }, [previousYearRequest]);
+
+  const currentYearData = useMemo(() => {
+    console.log('>>>>> calc currentYearData');
+    // TODO: I think (?) this is memoizing as expected,
+    // tho this matters less as it's always changing
+    return [extractLatestPerimeters(allFiresForYearRequest, time)];
+    // TODO: ensure referential equality on allFiresForYearRequest
+    // when derived from same `year`, else use only `year` as dep
+  }, [allFiresForYearRequest, time]);
 
   // TODO: handle status === ERROR
   return (
