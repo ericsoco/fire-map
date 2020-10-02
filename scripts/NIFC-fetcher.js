@@ -207,7 +207,10 @@ function logError(error) {
  */
 function processPerimeters(folder, mutableGeojson, params) {
   mutableGeojson.features = mutableGeojson.features.filter(
-    f => Boolean(f.geometry) && f.properties.gisacres > params.acres
+    f =>
+      Boolean(f.geometry) &&
+      Boolean(f.properties.incidentname) &&
+      f.properties.gisacres > params.acres
   );
   simplify(mutableGeojson, {
     tolerance: params.simplify,

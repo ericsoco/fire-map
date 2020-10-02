@@ -32,7 +32,11 @@ const barProps = {
   motionDamping: 15,
   minValue: 0,
   maxValue: 'auto',
-  padding: 0.1,
+  padding: 0.0,
+  indexScale: {
+    type: 'band',
+    round: false,
+  },
   xScale: {
     type: 'time',
     format: '%m %Y',
@@ -58,6 +62,19 @@ const barProps = {
     },
   },
 };
+
+// eslint-disable-next-line no-unused-vars
+function getDebugData(data) {
+  return () => {
+    const debugData = data.map(d => ({ ...d, value: Math.random() }));
+    if (debugData.length) {
+      debugData[0].value = 2;
+      debugData[debugData.length - 1].value = 2;
+      console.log({ debugData });
+    }
+    return debugData;
+  };
+}
 
 export default function SliderBarChart({ currentIndex, data }) {
   return (

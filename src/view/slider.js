@@ -127,11 +127,11 @@ const ticks = deriveTicks(DATE_DOMAIN);
 const step = 24 * 60 * 60 * 1000;
 
 function formatDateTick(date) {
-  return date.getMonth() === 0
-    ? date.toLocaleDateString(undefined, {
-        year: 'numeric',
-      })
-    : '';
+  if (date.getMonth() !== 0) return '';
+  const longTick = date.toLocaleDateString(undefined, {
+    year: 'numeric',
+  });
+  return date.getFullYear() % 4 === 0 ? longTick : `'${longTick.slice(2)}`;
 }
 
 function formatDateTooltip(ts) {

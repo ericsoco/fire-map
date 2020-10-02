@@ -42,8 +42,17 @@
         don't blank out whole fire layer because of null request
 
 ### slider
-  - [ ] align bars w/ slider
-      (requires fixing 2020 data)
+  - [X] align bars w/ slider
+      Problem is within Nivo -- `bar/common/getIndexedScale` uses `d3.scaleBand.rangeRound()`. Have local changes to my Nivo fork to add a `nice` prop to `<Bar>`, and have verified in fire-map that passing `nice=false` with that new feature works. So, next steps:
+        - [X] Merge nivo upstream into my fork
+        - [X] Issue PR with these local changes
+              https://github.com/plouc/nivo/pull/1282
+          - [X] Are there any unit test changes required?
+        - [X] Point fire-map at my nivo fork until PR is merged
+          Ugghhhh...can't figure out how to get @nivo/bar to work with my fork :/ something about it being a scope package / subfolder.
+          May require a postinstall (?) build step to build `node_modules/nivo/packages/bar`:
+            - `cd ./node_modules/nivo && make init; make package-build-bar`
+              ...Just stopped work here until now, when my PR has been released (0.66.0)
   - [ ] verify data against CALFIRE (e.g. https://www.fire.ca.gov/incidents/2018/)
     - [ ] now using final perimeters to determine acres / month; a better solution would be to check last month's perimeters against this month and subtract to calculate differential per perimeter across month boundaries.
   - [ ] tooltip: use 🔥 emoji to indicate relative amount of fire, either with number of chars or font size
