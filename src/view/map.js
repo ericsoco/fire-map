@@ -113,29 +113,21 @@ function flattenPerimeters(firesRequests) {
  * of each fire, and flatten results into a features array
  */
 function extractLatestPerimeters(allFiresRequest, currentTime) {
-  if (!isLoaded(allFiresRequest)) {
-    return allFiresRequest;
-  }
+  const data = isLoaded(allFiresRequest) ? allFiresRequest.data : {};
 
-  const latestPerimeters = Object.keys(allFiresRequest.data).reduce(
-    (lastPerimeters, name) => {
-      const latestPerimeterForFire = allFiresRequest.data[name].find(d => {
-        const date = getFireDate(d);
-        return date && date <= currentTime;
-      });
-      if (latestPerimeterForFire) {
-        lastPerimeters.push(latestPerimeterForFire);
-      }
-      return lastPerimeters;
-    },
-    []
-  );
+  const latestPerimeters = Object.keys(data).reduce((lastPerimeters, name) => {
+    const latestPerimeterForFire = data[name].find(d => {
+      const date = getFireDate(d);
+      return date && date <= currentTime;
+    });
+    if (latestPerimeterForFire) {
+      lastPerimeters.push(latestPerimeterForFire);
+    }
+    return lastPerimeters;
+  }, []);
   return {
-    ...allFiresRequest,
-    data: {
-      type: 'FeatureCollection',
-      features: latestPerimeters,
-    },
+    type: 'FeatureCollection',
+    features: latestPerimeters,
   };
 }
 
@@ -197,7 +189,7 @@ export default function Map({ currentDate, stateCode }) {
     console.log('>>>>> calc currentYearData');
     // TODO: I think (?) this is memoizing as expected,
     // tho this matters less as it's always changing
-    return [extractLatestPerimeters(allFiresForYearRequest, time)];
+    return extractLatestPerimeters(allFiresForYearRequest, time);
     // TODO: ensure referential equality on allFiresForYearRequest
     // when derived from same `year`, else use only `year` as dep
   }, [allFiresForYearRequest, time]);
