@@ -9,15 +9,22 @@ import { stateConfigs } from '../constants';
 import Map from './map';
 import Slider from './slider';
 
+const Overlay = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+
+  padding: 1rem 1rem 4rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+`;
 const Title = styled.h1`
   color: ${p => p.theme.color};
   ${p => p.theme.mixins.h1};
   margin-bottom: 1rem;
-`;
-const Overlay = styled.div`
-  position: absolute;
-  width: 100%;
-  padding: 1rem;
 `;
 
 function getStateConfig(routeParams) {

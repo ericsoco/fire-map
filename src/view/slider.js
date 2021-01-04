@@ -24,10 +24,10 @@ import { colors } from './style/theme';
 import SliderBarChart, { HEIGHT as BAR_CHART_HEIGHT } from './slider-bar-chart';
 
 const Container = styled.div`
-  grid-column: 2 / 3;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0 2rem;
 `;
 
 const Button = styled.button`
@@ -97,6 +97,21 @@ const StyledMUISlider = withStyles({
   },
 })(MUISlider);
 
+const AxisUnderlay = styled.div`
+  width: 100%;
+  height: 1.5rem;
+  position: absolute;
+  top: ${BAR_CHART_HEIGHT};
+  margin-top: 0.5rem;
+  border-top: solid 1px rgba(255, 255, 255, 0.25);
+  border-bottom: solid 1px rgba(255, 255, 255, 0.25);
+  background-image: repeating-linear-gradient(
+    to right,
+    ${`rgba(${colors.SLIDER.join()}, 0)`},
+    ${`rgba(${colors.SLIDER.join()}, 0.15)`} ${p => p.yearWidthPct}%
+  );
+`;
+
 const StyledTooltip = withStyles(theme => ({
   tooltip: {
     backgroundColor: theme.palette.common.white,
@@ -127,7 +142,8 @@ const ticks = deriveTicks(DATE_DOMAIN);
 const step = 24 * 60 * 60 * 1000;
 
 function formatDateTick(date) {
-  if (date.getMonth() !== 0) return '';
+  // Label each year on July 1, to center label in year
+  if (date.getMonth() !== 6) return '';
   const longTick = date.toLocaleDateString(undefined, {
     year: 'numeric',
   });
@@ -268,6 +284,9 @@ export default function Slider({ currentDate }) {
 
   const showTooltip = playbackStart || isHovered;
 
+  const yearWidthPct =
+    100 / (DATE_DOMAIN.max.getFullYear() - DATE_DOMAIN.min.getFullYear() + 1);
+
   return (
     <Container
       onMouseOver={() => setIsHovered(true)}
@@ -282,6 +301,7 @@ export default function Slider({ currentDate }) {
       </Button>
       <SliderContainer>
         <SliderBarChart data={barChartData} currentIndex={currentBarIndex} />
+        <AxisUnderlay yearWidthPct={yearWidthPct} />
         <StyledMUISlider
           min={DATE_DOMAIN.min.getTime()}
           max={DATE_DOMAIN.max.getTime()}

@@ -42,6 +42,11 @@
         don't blank out whole fire layer because of null request
 
 ### slider
+  - slider refinement
+    - [X] too difficult to discern summer / winter in timeline. add subtle background gradient
+    - [ ] tooltip appears twice / flickers when rolling over tick label
+    - [ ] tooltip doesn't appear at hover location on bar graph (is this a regression? noticed before adding gradient/annual label bkgd)
+    - [ ] slight misalignment between bar chart + underlay and slider (zoom in on start of slider to see this, note also gradient stops not quite aligned with year ticks)
   - [X] align bars w/ slider
       Problem is within Nivo -- `bar/common/getIndexedScale` uses `d3.scaleBand.rangeRound()`. Have local changes to my Nivo fork to add a `nice` prop to `<Bar>`, and have verified in fire-map that passing `nice=false` with that new feature works. So, next steps:
         - [X] Merge nivo upstream into my fork
