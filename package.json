@@ -21,7 +21,7 @@
     "@material-ui/icons": "^4.5.1",
     "@nivo/bar": "^0.67.0",
     "@nivo/core": "^0.67.0",
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "d3-format": "^2.0.0",
     "d3-scale": "^3.2.1",
     "deck.gl": "^8.0.7",
