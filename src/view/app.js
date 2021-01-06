@@ -20,11 +20,13 @@ const Overlay = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  pointer-events: none;
 `;
 const Title = styled.h1`
   color: ${p => p.theme.color};
   ${p => p.theme.mixins.h1};
   margin-bottom: 1rem;
+  pointer-events: auto;
 `;
 
 function getStateConfig(routeParams) {

@@ -43,10 +43,10 @@
 
 ### slider
   - slider refinement
-    - [X] too difficult to discern summer / winter in timeline. add subtle background gradient
     - [ ] tooltip appears twice / flickers when rolling over tick label
     - [ ] tooltip doesn't appear at hover location on bar graph (is this a regression? noticed before adding gradient/annual label bkgd)
-    - [ ] slight misalignment between bar chart + underlay and slider (zoom in on start of slider to see this, note also gradient stops not quite aligned with year ticks)
+    - [X] too difficult to discern summer / winter in timeline. add subtle background gradient
+    - [X] slight misalignment between bar chart + underlay and slider (zoom in on start of slider to see this, note also gradient stops not quite aligned with year ticks)
   - [X] align bars w/ slider
       Problem is within Nivo -- `bar/common/getIndexedScale` uses `d3.scaleBand.rangeRound()`. Have local changes to my Nivo fork to add a `nice` prop to `<Bar>`, and have verified in fire-map that passing `nice=false` with that new feature works. So, next steps:
         - [X] Merge nivo upstream into my fork
@@ -60,7 +60,7 @@
               ...Just stopped work here until now, when my PR has been released (0.66.0)
   - [ ] verify data against CALFIRE (e.g. https://www.fire.ca.gov/incidents/2018/)
     - [ ] now using final perimeters to determine acres / month; a better solution would be to check last month's perimeters against this month and subtract to calculate differential per perimeter across month boundaries.
-  - [ ] tooltip: use 🔥 emoji to indicate relative amount of fire, either with number of chars or font size
+  - [ ] tooltip: use 🔥 emoji to indicate relative amount of fire, either with number of chars (log scale? one fire per digit) or font size
   - [ ] label with notable fires (megafires (> 100k acres), biggest per year, etc)
     - [ ] link labels to zoom map + slider to fire (?)
   - [ ] consider coloring segments of slider by year depending if data loaded for that year (like buffering/progress bar)

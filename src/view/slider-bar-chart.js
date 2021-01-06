@@ -70,22 +70,23 @@ function getDebugData(data) {
     if (debugData.length) {
       debugData[0].value = 2;
       debugData[debugData.length - 1].value = 2;
-      console.log({ debugData });
     }
+    console.log({ debugData });
     return debugData;
   };
 }
 
 export default function SliderBarChart({ currentIndex, data }) {
+  // const d = useMemo(getDebugData(data), [data]);
   return (
     <ChartContainer>
       <ResponsiveBar
         {...barProps}
         data={data}
         colors={({ index }) =>
-          index - 1 < currentIndex
+          index < currentIndex
             ? `rgba(${colors.SLIDER.join()}, 1)`
-            : index - 1 === currentIndex
+            : index === currentIndex
             ? `rgba(${colors.FIRE.join()}, 1)`
             : `rgba(${colors.SLIDER.join()}, 0.35)`
         }

@@ -28,6 +28,7 @@ const Container = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 0 2rem;
+  pointer-events: auto;
 `;
 
 const Button = styled.button`
@@ -57,6 +58,7 @@ const SliderTooltipContent = styled.div`
 `;
 
 const SLIDER_TRACK_WIDTH = 2;
+const SLIDER_THUMB_SIZE = 20;
 const StyledMUISlider = withStyles({
   root: {
     height: SLIDER_TRACK_WIDTH,
@@ -64,12 +66,12 @@ const StyledMUISlider = withStyles({
     padding: `${BAR_CHART_HEIGHT} 0 1rem 0`,
   },
   thumb: {
-    height: 20,
-    width: 20,
+    height: SLIDER_THUMB_SIZE,
+    width: SLIDER_THUMB_SIZE,
     backgroundColor: 'rgb(255, 255, 255, 0.65)',
     border: '2px solid currentColor',
-    marginTop: -8,
-    marginLeft: -10,
+    marginTop: (SLIDER_TRACK_WIDTH - SLIDER_THUMB_SIZE) / 2,
+    marginLeft: (SLIDER_TRACK_WIDTH - SLIDER_THUMB_SIZE) / 2 - 1,
     '&:focus, &:hover, &$active': {
       boxShadow: 'inherit',
     },
@@ -79,6 +81,7 @@ const StyledMUISlider = withStyles({
     height: 2 * SLIDER_TRACK_WIDTH,
     width: 2 * SLIDER_TRACK_WIDTH,
     marginTop: -SLIDER_TRACK_WIDTH,
+    marginLeft: -SLIDER_TRACK_WIDTH - 1,
     borderRadius: 2 * SLIDER_TRACK_WIDTH,
     border: `1px solid rgb(${colors.SLIDER.join()})`,
     background: 'none',
@@ -97,18 +100,24 @@ const StyledMUISlider = withStyles({
   },
 })(MUISlider);
 
+const sliderRGB = colors.SLIDER.join();
+const sliderRGBAlt = [
+  colors.SLIDER[0] + (255 - colors.SLIDER[0]) * 0.25,
+  colors.SLIDER[1] + (255 - colors.SLIDER[1]) * 0.4,
+  colors.SLIDER[2] + (255 - colors.SLIDER[2]) * 0.4,
+].join();
 const AxisUnderlay = styled.div`
   width: 100%;
   height: 1.5rem;
   position: absolute;
   top: ${BAR_CHART_HEIGHT};
   margin-top: 0.5rem;
-  border-top: solid 1px rgba(255, 255, 255, 0.25);
-  border-bottom: solid 1px rgba(255, 255, 255, 0.25);
   background-image: repeating-linear-gradient(
     to right,
-    ${`rgba(${colors.SLIDER.join()}, 0)`},
-    ${`rgba(${colors.SLIDER.join()}, 0.15)`} ${p => p.yearWidthPct}%
+    ${`rgba(${sliderRGB}, 0.1)`},
+    ${`rgba(${sliderRGB}, 0.2)`} ${p => p.yearWidthPct}%,
+    ${`rgba(${sliderRGBAlt}, 0.1)`} ${p => p.yearWidthPct}%,
+    ${`rgba(${sliderRGBAlt}, 0.2)`} ${p => 2 * p.yearWidthPct}%
   );
 `;
 
@@ -194,12 +203,17 @@ function getCurrentBarIndex(barChartData, ts) {
 }
 
 function getAcresForDate(data, ts) {
-  let i = 0;
-  let datum = data[i++];
+  let i = -1;
+  let datum = data[++i];
   if (!datum || ts < datum.ts) return null;
-  while (datum && ts > datum.ts) {
-    datum = data[i++];
+
+  // Step forward until ts overshoots datum...
+  while (datum && datum.ts < ts) {
+    datum = data[++i];
   }
+  // ...then back up one step to get correct datum
+  datum = data[i - 1];
+
   return datum?.value ? formatAcres(datum.value) : null;
 }
 
