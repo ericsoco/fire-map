@@ -16,6 +16,13 @@
     and set visibility of each feature based on its datestamp 🤦‍♀️
   - however, have to consider bundle size, really want to lazy load...
   - [X] yeah ok, so load each year as single merged file, on-demand
+  - [ ] debug perimeter display over time
+    - [X] load simplified perimeters to improve perf during testing
+    - [ ] continue with debugging in `use-complete-fires` and `map.js`
+    - [ ] restore previous perimeters once debugging complete
+      - [ ] refine perimeter simplification
+        - [ ] See `simplifyLowRes` and `acresLowRes` in `NIFC-fetcher`
+      - [ ] remove `-low` prefix from perimeter filenames in `use-all-fires` / `use-complete-fires` hooks
   - [ ] even some of these are heavy, simplify geometry more
         note: increased simplification once,
         from: .domain([10, 500]).range([30, 3]).exponent(0.25)
@@ -168,7 +175,7 @@
 ## Bugs
 - [ ] title + slider disappear while LoadingIcon visible
 - [ ] 2020 data not scraping correctly
-  - [ ] bar chart doesn't align with slider
+  - [X] bar chart doesn't align with slider
 - [ ] Can we remove `extractLatestPerimeters` and use preprocessed finalPerimeters instead?
 
 

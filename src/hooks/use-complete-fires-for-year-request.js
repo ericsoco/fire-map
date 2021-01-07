@@ -9,26 +9,26 @@ import {
 } from '../state/fires-selectors';
 import { isLoaded } from '../utils/request-utils';
 
-import fires2000 from 'url:~/static/data/fires/2000/CA/finalPerimeters.geojson';
-import fires2001 from 'url:~/static/data/fires/2001/CA/finalPerimeters.geojson';
-import fires2002 from 'url:~/static/data/fires/2002/CA/finalPerimeters.geojson';
-import fires2003 from 'url:~/static/data/fires/2003/CA/finalPerimeters.geojson';
-import fires2004 from 'url:~/static/data/fires/2004/CA/finalPerimeters.geojson';
-import fires2005 from 'url:~/static/data/fires/2005/CA/finalPerimeters.geojson';
-import fires2006 from 'url:~/static/data/fires/2006/CA/finalPerimeters.geojson';
-import fires2007 from 'url:~/static/data/fires/2007/CA/finalPerimeters.geojson';
-import fires2008 from 'url:~/static/data/fires/2008/CA/finalPerimeters.geojson';
-import fires2009 from 'url:~/static/data/fires/2009/CA/finalPerimeters.geojson';
-import fires2010 from 'url:~/static/data/fires/2010/CA/finalPerimeters.geojson';
-import fires2011 from 'url:~/static/data/fires/2011/CA/finalPerimeters.geojson';
-import fires2012 from 'url:~/static/data/fires/2012/CA/finalPerimeters.geojson';
-import fires2013 from 'url:~/static/data/fires/2013/CA/finalPerimeters.geojson';
-import fires2014 from 'url:~/static/data/fires/2014/CA/finalPerimeters.geojson';
-import fires2015 from 'url:~/static/data/fires/2015/CA/finalPerimeters.geojson';
-import fires2016 from 'url:~/static/data/fires/2016/CA/finalPerimeters.geojson';
-import fires2017 from 'url:~/static/data/fires/2017/CA/finalPerimeters.geojson';
-import fires2018 from 'url:~/static/data/fires/2018/CA/finalPerimeters.geojson';
-import fires2019 from 'url:~/static/data/fires/2019/CA/finalPerimeters.geojson';
+import fires2000 from 'url:~/static/data/fires/2000/CA/finalPerimeters-low.geojson';
+import fires2001 from 'url:~/static/data/fires/2001/CA/finalPerimeters-low.geojson';
+import fires2002 from 'url:~/static/data/fires/2002/CA/finalPerimeters-low.geojson';
+import fires2003 from 'url:~/static/data/fires/2003/CA/finalPerimeters-low.geojson';
+import fires2004 from 'url:~/static/data/fires/2004/CA/finalPerimeters-low.geojson';
+import fires2005 from 'url:~/static/data/fires/2005/CA/finalPerimeters-low.geojson';
+import fires2006 from 'url:~/static/data/fires/2006/CA/finalPerimeters-low.geojson';
+import fires2007 from 'url:~/static/data/fires/2007/CA/finalPerimeters-low.geojson';
+import fires2008 from 'url:~/static/data/fires/2008/CA/finalPerimeters-low.geojson';
+import fires2009 from 'url:~/static/data/fires/2009/CA/finalPerimeters-low.geojson';
+import fires2010 from 'url:~/static/data/fires/2010/CA/finalPerimeters-low.geojson';
+import fires2011 from 'url:~/static/data/fires/2011/CA/finalPerimeters-low.geojson';
+import fires2012 from 'url:~/static/data/fires/2012/CA/finalPerimeters-low.geojson';
+import fires2013 from 'url:~/static/data/fires/2013/CA/finalPerimeters-low.geojson';
+import fires2014 from 'url:~/static/data/fires/2014/CA/finalPerimeters-low.geojson';
+import fires2015 from 'url:~/static/data/fires/2015/CA/finalPerimeters-low.geojson';
+import fires2016 from 'url:~/static/data/fires/2016/CA/finalPerimeters-low.geojson';
+import fires2017 from 'url:~/static/data/fires/2017/CA/finalPerimeters-low.geojson';
+import fires2018 from 'url:~/static/data/fires/2018/CA/finalPerimeters-low.geojson';
+import fires2019 from 'url:~/static/data/fires/2019/CA/finalPerimeters-low.geojson';
 
 const FIRST_YEAR = 2000;
 const FIRES_FOR_YEAR = {
