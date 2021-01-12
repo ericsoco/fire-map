@@ -114,7 +114,6 @@ export default function useCompleteFiresForYearRequest(selectedYear) {
     }
     return years;
   }, [allCompleteRequests, selectedYear]);
-  console.log(priorYearRequests.map(({ request }) => request));
 
   const readyForNext = isLoaded(selectedYearRequest) && queuedYear;
   const request = readyForNext ? queuedYearRequest : selectedYearRequest;
