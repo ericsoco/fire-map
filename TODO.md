@@ -16,14 +16,25 @@
     and set visibility of each feature based on its datestamp 🤦‍♀️
   - however, have to consider bundle size, really want to lazy load...
   - [X] yeah ok, so load each year as single merged file, on-demand
+  - [X] debug perimeter display over time
+    - [X] load simplified perimeters to improve perf during testing
+    - [X] continue with debugging in `use-complete-fires` and `map.js`
+      - [X] looks like all-fires-for-year is working more or less correctly, only issue is complete-fires not rendering
+      ... Looks request cache is getting popped on every hook call...??
+    - [X] restore previous perimeters once debugging complete
+  - [ ] refine perimeter simplification
+    - [ ] See `simplifyLowRes` and `acresLowRes` in `NIFC-fetcher`
+    - [X] remove `-low` prefix from perimeter filenames in `use-all-fires` / `use-complete-fires` hooks
   - [ ] even some of these are heavy, simplify geometry more
         note: increased simplification once,
         from: .domain([10, 500]).range([30, 3]).exponent(0.25)
         to: .domain([5, 350]).range([20, 2]).exponent(0.15)
         but still end up with very heavy (10+MB) merged files.
         may need to consider other strategies...
-  - [ ] load (serially?) in the background after app init
-        NOTE: use-complete-fires already does this, only it loads backwards from selected date...
+  - [ ] load low-res at low zoom (on init?), high res when zooming in
+    - [ ] consider hexes at low zoom, polygons at high zoom
+    - [ ] load (serially?) in the background after app init
+        NOTE: use-complete-fires already does this, only it loads backwards from selected date...didn't i write code once that loaded both forward and backward?
   - [X] ohhh wait, each fire folder has multiple perimeters per fire.
         don't have that in merged fires :/
         looks like we are going to have to load all geojsons for each fire,
@@ -36,7 +47,14 @@
   - [ ] ^^ not sure about best perf strategy; may need to do filtering
         in getFillColor instead of passing new array every time
         (generated in extractLatestPerimeters)...
-  - [ ] memoize properly, not using useState, per comments in map.js
+  - [X] memoize properly, not using useState, per comments in map.js
+  - [ ] check for near-duplicate perimeters. examples:
+    - [ ] Ranch Fire (2018): two perimeters (ids 'Ranch' and 'RANCH'):
+          - Aug 08 - 17 (329817 acres)
+          - Aug 26 - Sept 23 (410202 acres)
+    - [ ] Thomas Fire (2017-8)
+          - end date Dec 27, 2017
+          - end date Jan 06, 2018
   - [ ] look into Date comparison optimizations in - map.js::extractLatestPerimeters - use-all-fires-for-year-request.js::sortPerimetersByDate
   - [X] handle requests for years beyond the last gracefully:
         don't blank out whole fire layer because of null request
@@ -96,6 +114,10 @@
 ### design
 - [ ] light / dark?
 - [ ] mobile layout?
+- [ ] fonts
+  - [ ] title
+  - [ ] UI / vis labels
+  - [ ] tooltips, callouts for fires
 
 ### map
   - [ ] basemap
@@ -105,6 +127,9 @@
     - [ ] reduce perimeters to h3 hexes at low zoom, for perf?
   - [-] Animate viewport from flat/top-down view to oblique view;
         oblique view (w/ pitch + bearing) is too foreign a perspective to start with
+
+### map interactions
+  - [ ] bug: if fire disappears while hovered, tooltip is not dismissed until next hovered fire
 
 ### other / ideas
   - [ ] encode polygon height to:
@@ -168,7 +193,7 @@
 ## Bugs
 - [ ] title + slider disappear while LoadingIcon visible
 - [ ] 2020 data not scraping correctly
-  - [ ] bar chart doesn't align with slider
+  - [X] bar chart doesn't align with slider
 - [ ] Can we remove `extractLatestPerimeters` and use preprocessed finalPerimeters instead?
 
 

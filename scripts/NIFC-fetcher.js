@@ -24,6 +24,8 @@ const ARCGIS_FILENAME = 'arcgis.json';
 const RAW_GEOJSON_FILENAME = 'rawPerimeters.geojson';
 const ALL_PERIMETERS_FILENAME = 'allPerimeters.geojson';
 const FINAL_PERIMETERS_FILENAME = 'finalPerimeters.geojson';
+const ALL_PERIMETERS_LOW_RES_FILENAME = 'allPerimeters-low.geojson';
+const FINAL_PERIMETERS_LOW_RES_FILENAME = 'finalPerimeters-low.geojson';
 
 const BASE_PATH =
   'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services';
@@ -73,7 +75,9 @@ async function main() {
     dest: argv.dest || DEFAULT_DEST,
     // Perimeters smaller than this are filtered out of final output
     acres: argv.acres || 100,
+    acresLowRes: argv.acresLowRes || 10000,
     simplify: argv.simplify || 0.001,
+    simplifyLowRes: argv.simplifyLowRes || 0.01,
     reprocess: argv.reprocess || false,
   };
 
@@ -162,7 +166,11 @@ async function fetchFiresForStateYear(params) {
     const geojson = arcgisUtils.arcgisToGeoJSON(JSON.parse(arcgis));
     const parsedGeojson = JSON.stringify(geojson, null, 2);
     fs.writeFileSync(`${destPath}/${RAW_GEOJSON_FILENAME}`, parsedGeojson);
-    processPerimeters(destPath, geojson, params);
+
+    // Clone geojson before mutating, to process a second time at low-res
+    const geojsonLow = JSON.parse(JSON.stringify(geojson));
+    processPerimeters(destPath, geojson, params, { lowRes: false });
+    processPerimeters(destPath, geojsonLow, params, { lowRes: true });
   } catch (err) {
     logError(err);
   }
@@ -205,33 +213,38 @@ function logError(error) {
  * - merging back into single FeatureCollection
  * Therefore, just applying a fixed simplification for each collection for now.
  */
-function processPerimeters(folder, mutableGeojson, params) {
+function processPerimeters(folder, mutableGeojson, params, { lowRes }) {
+  const minAcres = lowRes ? params.acresLowRes : params.acres;
   mutableGeojson.features = mutableGeojson.features.filter(
     f =>
       Boolean(f.geometry) &&
       Boolean(f.properties.incidentname) &&
-      f.properties.gisacres > params.acres
+      f.properties.gisacres > minAcres
   );
   simplify(mutableGeojson, {
-    tolerance: params.simplify,
+    tolerance: lowRes ? params.simplifyLowRes : params.simplify,
     highQuality: true,
     mutate: true,
   });
 
+  const allFilename = lowRes
+    ? ALL_PERIMETERS_LOW_RES_FILENAME
+    : ALL_PERIMETERS_FILENAME;
   const allGeojson = JSON.stringify(mutableGeojson, null, 2);
-  fs.writeFileSync(`${folder}/${ALL_PERIMETERS_FILENAME}`, allGeojson);
+  fs.writeFileSync(`${folder}/${allFilename}`, allGeojson);
 
   console.info(
-    `🗜 Filtered and simplified GeoJSON and wrote to ${folder}/${ALL_PERIMETERS_FILENAME}`
+    `🗜 Filtered and simplified GeoJSON and wrote to ${folder}/${allFilename}`
   );
 
   mutableGeojson.features = mutableGeojson.features.filter(
     f => f.properties.latest === 'Y'
   );
+  const finalFilename = lowRes
+    ? FINAL_PERIMETERS_LOW_RES_FILENAME
+    : FINAL_PERIMETERS_FILENAME;
   const finalGeojson = JSON.stringify(mutableGeojson, null, 2);
-  fs.writeFileSync(`${folder}/${FINAL_PERIMETERS_FILENAME}`, finalGeojson);
+  fs.writeFileSync(`${folder}/${finalFilename}`, finalGeojson);
 
-  console.info(
-    `💾 Wrote final perimeters to ${folder}/${ALL_PERIMETERS_FILENAME}`
-  );
+  console.info(`💾 Wrote final perimeters to ${folder}/${finalFilename}`);
 }

@@ -67,9 +67,10 @@ const basemap = performAdditiveBlending
   : 'mapbox://styles/mapbox/light-v10';
 
 const DAY = 24 * 60 * 60 * 1000;
+const ALPHA_RANGE = { max: 240, min: 100 };
 const alphaScale = scalePow()
   .domain([0, 16 * 7 * DAY])
-  .range([240, 100])
+  .range([ALPHA_RANGE.max, ALPHA_RANGE.min])
   .clamp(true)
   .exponent(0.5);
 
@@ -152,47 +153,26 @@ export default function Map({ currentDate, stateCode }) {
   const [viewState, setViewState] = useState(initialViewState);
   const [hoverInfo, setHoverInfo] = useState(null);
 
-  // const [priorYearsData, setPriorYearsData] = useState({
-  //   type: 'FeatureCollection',
-  //   features: [],
-  // });
-  // const [previousYearData, setPreviousYearData] = useState({
-  //   type: 'FeatureCollection',
-  //   features: [],
-  // });
-  // const [currentYearData, setCurrentYearData] = useState({
-  //   type: 'FeatureCollection',
-  //   features: [],
-  // });
-
   const year = currentDate.getFullYear();
   const time = currentDate.getTime();
 
   const allFiresForYearRequest = useAllFiresForYearRequest(year);
-  const { priorYearRequests } = useCompleteFiresForYearRequest(year);
-  const previousYearRequest = priorYearRequests.pop();
+  const completeFiresForYearRequests = useCompleteFiresForYearRequest(year);
+  const { priorYearRequests } = completeFiresForYearRequests;
+  const previousYearRequest = priorYearRequests[priorYearRequests.length - 1];
 
-  const priorYearsData = useMemo(() => {
-    console.log('>>>>> calc priorYearsData');
-    return flattenPerimeters(priorYearRequests);
-    // TODO: ensure referential equality on priorYearRequests
-    // when derived from same `year`, else use only `year` as dep
-  }, [priorYearRequests]);
-
-  const previousYearData = useMemo(() => {
-    console.log('>>>>> calc previousYearData');
-    // TODO: I think this is memoizing as expected
-    return flattenPerimeters(previousYearRequest ? [previousYearRequest] : []);
-  }, [previousYearRequest]);
-
-  const currentYearData = useMemo(() => {
-    console.log('>>>>> calc currentYearData');
-    // TODO: I think (?) this is memoizing as expected,
-    // tho this matters less as it's always changing
-    return extractLatestPerimeters(allFiresForYearRequest, time);
-    // TODO: ensure referential equality on allFiresForYearRequest
-    // when derived from same `year`, else use only `year` as dep
-  }, [allFiresForYearRequest, time]);
+  const priorYearsData = useMemo(
+    () => flattenPerimeters(priorYearRequests.slice(0, -1)),
+    [priorYearRequests]
+  );
+  const previousYearData = useMemo(
+    () => flattenPerimeters(previousYearRequest ? [previousYearRequest] : []),
+    [previousYearRequest]
+  );
+  const currentYearData = useMemo(
+    () => extractLatestPerimeters(allFiresForYearRequest, time),
+    [allFiresForYearRequest, time]
+  );
 
   // TODO: handle status === ERROR
   return (
@@ -208,10 +188,10 @@ export default function Map({ currentDate, stateCode }) {
           mapStyle={basemap}
         />
 
-        {isLoaded(priorYearRequests[priorYearRequests.length - 1]) && (
+        {isLoaded(previousYearRequest) && (
           // Layer for all years before previous:
           // renders only the last perimeter of each fire,
-          // with fixed alpha for all perimeters
+          // with fixed alpha for all perimeters.
           <GeoJsonLayer
             id="priorYears"
             data={priorYearsData}
@@ -223,8 +203,10 @@ export default function Map({ currentDate, stateCode }) {
             extruded={false}
             lineWidthScale={20}
             lineWidthMinPixels={2}
-            getFillColor={[...colors.FIRE, 100]}
+            getFillColor={[...colors.FIRE, ALPHA_RANGE.min]}
             getLineColor={[...colors.FIRE, 255]}
+            // debug: set stroked={true}
+            // getLineColor={[0, 255, 0, 255]}
             parameters={layerParameters}
             pickable={true}
             onHover={setHoverInfo}
@@ -245,13 +227,15 @@ export default function Map({ currentDate, stateCode }) {
             filled={true}
             extruded={false}
             lineWidthScale={20}
-            lineWidthMinPixels={2}
+            lineWidthMinPixels={1}
             getFillColor={d => {
               const age = currentDate - getFireDate(d);
               const alpha = age >= 0 ? alphaScale(age) : 0;
               return [...colors.FIRE, alpha];
             }}
             getLineColor={[...colors.FIRE, 255]}
+            // debug: set stroked={true}
+            // getLineColor={[0, 0, 255, 255]}
             parameters={layerParameters}
             pickable={true}
             onHover={setHoverInfo}
