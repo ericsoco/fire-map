@@ -16,15 +16,15 @@
     and set visibility of each feature based on its datestamp 🤦‍♀️
   - however, have to consider bundle size, really want to lazy load...
   - [X] yeah ok, so load each year as single merged file, on-demand
-  - [ ] debug perimeter display over time
+  - [X] debug perimeter display over time
     - [X] load simplified perimeters to improve perf during testing
-    - [ ] continue with debugging in `use-complete-fires` and `map.js`
-      - [ ] looks like all-fires-for-year is working more or less correctly, only issue is complete-fires not rendering
+    - [X] continue with debugging in `use-complete-fires` and `map.js`
+      - [X] looks like all-fires-for-year is working more or less correctly, only issue is complete-fires not rendering
       ... Looks request cache is getting popped on every hook call...??
-    - [ ] restore previous perimeters once debugging complete
-      - [ ] refine perimeter simplification
-        - [ ] See `simplifyLowRes` and `acresLowRes` in `NIFC-fetcher`
-        - [ ] remove `-low` prefix from perimeter filenames in `use-all-fires` / `use-complete-fires` hooks
+    - [X] restore previous perimeters once debugging complete
+  - [ ] refine perimeter simplification
+    - [ ] See `simplifyLowRes` and `acresLowRes` in `NIFC-fetcher`
+    - [X] remove `-low` prefix from perimeter filenames in `use-all-fires` / `use-complete-fires` hooks
   - [ ] even some of these are heavy, simplify geometry more
         note: increased simplification once,
         from: .domain([10, 500]).range([30, 3]).exponent(0.25)
@@ -32,8 +32,9 @@
         but still end up with very heavy (10+MB) merged files.
         may need to consider other strategies...
   - [ ] load low-res at low zoom (on init?), high res when zooming in
+    - [ ] consider hexes at low zoom, polygons at high zoom
     - [ ] load (serially?) in the background after app init
-        NOTE: use-complete-fires already does this, only it loads backwards from selected date...
+        NOTE: use-complete-fires already does this, only it loads backwards from selected date...didn't i write code once that loaded both forward and backward?
   - [X] ohhh wait, each fire folder has multiple perimeters per fire.
         don't have that in merged fires :/
         looks like we are going to have to load all geojsons for each fire,
