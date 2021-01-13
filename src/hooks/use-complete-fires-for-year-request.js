@@ -2,7 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 
-import { loadCompleteFiresForYear } from '../state/fires-reducer';
+import {
+  FIRE_RESOLUTION,
+  loadCompleteFiresForYear,
+} from '../state/fires-reducer';
 import {
   selectAllFires,
   selectCompleteFiresForYearRequest,
@@ -30,6 +33,27 @@ import fires2017 from 'url:~/static/data/fires/2017/CA/finalPerimeters.geojson';
 import fires2018 from 'url:~/static/data/fires/2018/CA/finalPerimeters.geojson';
 import fires2019 from 'url:~/static/data/fires/2019/CA/finalPerimeters.geojson';
 
+import firesLow2000 from 'url:~/static/data/fires/2000/CA/finalPerimeters-low.geojson';
+import firesLow2001 from 'url:~/static/data/fires/2001/CA/finalPerimeters-low.geojson';
+import firesLow2002 from 'url:~/static/data/fires/2002/CA/finalPerimeters-low.geojson';
+import firesLow2003 from 'url:~/static/data/fires/2003/CA/finalPerimeters-low.geojson';
+import firesLow2004 from 'url:~/static/data/fires/2004/CA/finalPerimeters-low.geojson';
+import firesLow2005 from 'url:~/static/data/fires/2005/CA/finalPerimeters-low.geojson';
+import firesLow2006 from 'url:~/static/data/fires/2006/CA/finalPerimeters-low.geojson';
+import firesLow2007 from 'url:~/static/data/fires/2007/CA/finalPerimeters-low.geojson';
+import firesLow2008 from 'url:~/static/data/fires/2008/CA/finalPerimeters-low.geojson';
+import firesLow2009 from 'url:~/static/data/fires/2009/CA/finalPerimeters-low.geojson';
+import firesLow2010 from 'url:~/static/data/fires/2010/CA/finalPerimeters-low.geojson';
+import firesLow2011 from 'url:~/static/data/fires/2011/CA/finalPerimeters-low.geojson';
+import firesLow2012 from 'url:~/static/data/fires/2012/CA/finalPerimeters-low.geojson';
+import firesLow2013 from 'url:~/static/data/fires/2013/CA/finalPerimeters-low.geojson';
+import firesLow2014 from 'url:~/static/data/fires/2014/CA/finalPerimeters-low.geojson';
+import firesLow2015 from 'url:~/static/data/fires/2015/CA/finalPerimeters-low.geojson';
+import firesLow2016 from 'url:~/static/data/fires/2016/CA/finalPerimeters-low.geojson';
+import firesLow2017 from 'url:~/static/data/fires/2017/CA/finalPerimeters-low.geojson';
+import firesLow2018 from 'url:~/static/data/fires/2018/CA/finalPerimeters-low.geojson';
+import firesLow2019 from 'url:~/static/data/fires/2019/CA/finalPerimeters-low.geojson';
+
 const FIRST_YEAR = 2000;
 const FIRES_FOR_YEAR = {
   2000: fires2000,
@@ -54,6 +78,29 @@ const FIRES_FOR_YEAR = {
   2019: fires2019,
 };
 
+const FIRES_LOW_FOR_YEAR = {
+  2000: firesLow2000,
+  2001: firesLow2001,
+  2002: firesLow2002,
+  2003: firesLow2003,
+  2004: firesLow2004,
+  2005: firesLow2005,
+  2006: firesLow2006,
+  2007: firesLow2007,
+  2008: firesLow2008,
+  2009: firesLow2009,
+  2010: firesLow2010,
+  2011: firesLow2011,
+  2012: firesLow2012,
+  2013: firesLow2013,
+  2014: firesLow2014,
+  2015: firesLow2015,
+  2016: firesLow2016,
+  2017: firesLow2017,
+  2018: firesLow2018,
+  2019: firesLow2019,
+};
+
 function getNextRequest(year, allRequests) {
   let prevYear = year - 1;
   let nextRequest = allRequests[prevYear];
@@ -71,16 +118,19 @@ function getNextRequest(year, allRequests) {
  * serially loads years backwards through time until the first available year;
  * returns requests both for selected year and prior years as they load.
  */
-export default function useCompleteFiresForYearRequest(selectedYear) {
+export default function useCompleteFiresForYearRequest(
+  selectedYear,
+  resolution
+) {
   const [queuedYear, setQueuedYear] = useState(null);
 
   // Process the selected year request if it has not yet been started,
   // else process the queued year request
   const selectedYearRequest = useSelector(
-    selectCompleteFiresForYearRequest(selectedYear)
+    selectCompleteFiresForYearRequest(selectedYear, resolution)
   );
   const queuedYearRequest = useSelector(
-    selectCompleteFiresForYearRequest(queuedYear)
+    selectCompleteFiresForYearRequest(queuedYear, resolution)
   );
   const allFireRequests = useSelector(selectAllFires());
 
@@ -91,11 +141,11 @@ export default function useCompleteFiresForYearRequest(selectedYear) {
       Object.keys(allFireRequests).reduce(
         (completeFires, year) => ({
           ...completeFires,
-          [year]: allFireRequests[year].complete,
+          [year]: allFireRequests[year].complete?.[resolution],
         }),
         {}
       ),
-    [allFireRequests]
+    [allFireRequests, resolution]
   );
 
   // Retrieve all fires from the specified year back to the first empty year,
@@ -123,21 +173,31 @@ export default function useCompleteFiresForYearRequest(selectedYear) {
   // queue it for load after this year
   const nextRequest = getNextRequest(year, allCompleteRequests);
 
-  const firesForYear = FIRES_FOR_YEAR[year];
+  const firesForYear =
+    resolution === FIRE_RESOLUTION.HIGH
+      ? FIRES_FOR_YEAR[year]
+      : FIRES_LOW_FOR_YEAR[year];
+
   const dispatch = useDispatch();
 
   useEffect(() => {
     // Request only if not already in-flight
     if (!request) {
-      dispatch(loadCompleteFiresForYear.start({ year }));
+      dispatch(loadCompleteFiresForYear.start({ year, resolution }));
       axios(firesForYear)
         .then(response => {
           dispatch(
-            loadCompleteFiresForYear.success({ year, data: response.data })
+            loadCompleteFiresForYear.success({
+              year,
+              resolution,
+              data: response.data,
+            })
           );
         })
         .catch(error => {
-          dispatch(loadCompleteFiresForYear.failure({ year, error }));
+          dispatch(
+            loadCompleteFiresForYear.failure({ year, resolution, error })
+          );
         });
     } else if (isLoaded(request)) {
       // When this request completes:
@@ -149,7 +209,7 @@ export default function useCompleteFiresForYearRequest(selectedYear) {
         setQueuedYear(null);
       }
     }
-  }, [dispatch, firesForYear, year, request, nextRequest]);
+  }, [dispatch, firesForYear, year, resolution, request, nextRequest]);
 
   // Return the request for the currently-selected year;
   // also return previous years as they resolve in the background.

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 
 import {
+  FIRE_RESOLUTION,
   getFireDate,
   getFireName,
   loadAllFiresForYear,
@@ -30,6 +31,27 @@ import fires2017 from 'url:~/static/data/fires/2017/CA/allPerimeters.geojson';
 import fires2018 from 'url:~/static/data/fires/2018/CA/allPerimeters.geojson';
 import fires2019 from 'url:~/static/data/fires/2019/CA/allPerimeters.geojson';
 
+import firesLow2000 from 'url:~/static/data/fires/2000/CA/allPerimeters-low.geojson';
+import firesLow2001 from 'url:~/static/data/fires/2001/CA/allPerimeters-low.geojson';
+import firesLow2002 from 'url:~/static/data/fires/2002/CA/allPerimeters-low.geojson';
+import firesLow2003 from 'url:~/static/data/fires/2003/CA/allPerimeters-low.geojson';
+import firesLow2004 from 'url:~/static/data/fires/2004/CA/allPerimeters-low.geojson';
+import firesLow2005 from 'url:~/static/data/fires/2005/CA/allPerimeters-low.geojson';
+import firesLow2006 from 'url:~/static/data/fires/2006/CA/allPerimeters-low.geojson';
+import firesLow2007 from 'url:~/static/data/fires/2007/CA/allPerimeters-low.geojson';
+import firesLow2008 from 'url:~/static/data/fires/2008/CA/allPerimeters-low.geojson';
+import firesLow2009 from 'url:~/static/data/fires/2009/CA/allPerimeters-low.geojson';
+import firesLow2010 from 'url:~/static/data/fires/2010/CA/allPerimeters-low.geojson';
+import firesLow2011 from 'url:~/static/data/fires/2011/CA/allPerimeters-low.geojson';
+import firesLow2012 from 'url:~/static/data/fires/2012/CA/allPerimeters-low.geojson';
+import firesLow2013 from 'url:~/static/data/fires/2013/CA/allPerimeters-low.geojson';
+import firesLow2014 from 'url:~/static/data/fires/2014/CA/allPerimeters-low.geojson';
+import firesLow2015 from 'url:~/static/data/fires/2015/CA/allPerimeters-low.geojson';
+import firesLow2016 from 'url:~/static/data/fires/2016/CA/allPerimeters-low.geojson';
+import firesLow2017 from 'url:~/static/data/fires/2017/CA/allPerimeters-low.geojson';
+import firesLow2018 from 'url:~/static/data/fires/2018/CA/allPerimeters-low.geojson';
+import firesLow2019 from 'url:~/static/data/fires/2019/CA/allPerimeters-low.geojson';
+
 const FIRES_FOR_YEAR = {
   2000: fires2000,
   2001: fires2001,
@@ -51,6 +73,29 @@ const FIRES_FOR_YEAR = {
   2017: fires2017,
   2018: fires2018,
   2019: fires2019,
+};
+
+const FIRES_LOW_FOR_YEAR = {
+  2000: firesLow2000,
+  2001: firesLow2001,
+  2002: firesLow2002,
+  2003: firesLow2003,
+  2004: firesLow2004,
+  2005: firesLow2005,
+  2006: firesLow2006,
+  2007: firesLow2007,
+  2008: firesLow2008,
+  2009: firesLow2009,
+  2010: firesLow2010,
+  2011: firesLow2011,
+  2012: firesLow2012,
+  2013: firesLow2013,
+  2014: firesLow2014,
+  2015: firesLow2015,
+  2016: firesLow2016,
+  2017: firesLow2017,
+  2018: firesLow2018,
+  2019: firesLow2019,
 };
 
 /**
@@ -83,31 +128,35 @@ function mapByFire(data) {
  * Loads all perimeters of each fire in the requested year.
  * Note: Result is not GeoJSON, it is a map of perimeters by fire name.
  */
-export default function useAllFiresForYearRequest(year) {
+export default function useAllFiresForYearRequest(year, resolution) {
   // Process the selected year request if it has not yet been started
-  const request = useSelector(selectAllFiresForYearRequest(year));
+  const request = useSelector(selectAllFiresForYearRequest(year, resolution));
 
-  const firesForYear = FIRES_FOR_YEAR[year];
+  const firesForYear =
+    resolution === FIRE_RESOLUTION.HIGH
+      ? FIRES_FOR_YEAR[year]
+      : FIRES_LOW_FOR_YEAR[year];
   const dispatch = useDispatch();
 
   useEffect(() => {
     // Request only if not already in-flight
     if (!request) {
-      dispatch(loadAllFiresForYear.start({ year }));
+      dispatch(loadAllFiresForYear.start({ year, resolution }));
       axios(firesForYear)
         .then(response => {
           dispatch(
             loadAllFiresForYear.success({
               year,
+              resolution,
               data: mapByFire(response.data),
             })
           );
         })
         .catch(error => {
-          dispatch(loadAllFiresForYear.failure({ year, error }));
+          dispatch(loadAllFiresForYear.failure({ year, resolution, error }));
         });
     }
-  }, [dispatch, firesForYear, year, request]);
+  }, [dispatch, firesForYear, year, resolution, request]);
 
   return request;
 }

@@ -2,12 +2,12 @@ export function selectAllFires() {
   return state => state.fires.years;
 }
 
-export function selectAllFiresForYearRequest(year) {
-  return state => state.fires.years[year]?.all || null;
+export function selectAllFiresForYearRequest(year, resolution) {
+  return state => state.fires.years[year]?.all?.[resolution] || null;
 }
 
-export function selectCompleteFiresForYearRequest(year) {
-  return state => state.fires.years[year]?.complete || null;
+export function selectCompleteFiresForYearRequest(year, resolution) {
+  return state => state.fires.years[year]?.complete?.[resolution] || null;
 }
 
 /**
