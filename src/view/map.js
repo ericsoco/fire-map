@@ -10,7 +10,12 @@ import styled from 'styled-components';
 import { stateConfigs } from '../constants';
 import useAllFiresForYearRequest from '../hooks/use-all-fires-for-year-request';
 import useCompleteFiresForYearRequest from '../hooks/use-complete-fires-for-year-request';
-import { getFireAcres, getFireDate, getFireName } from '../state/fires-reducer';
+import {
+  FIRE_RESOLUTION,
+  getFireAcres,
+  getFireDate,
+  getFireName,
+} from '../state/fires-reducer';
 import { isLoading, isLoaded } from '../utils/request-utils';
 import { colors } from './style/theme';
 
@@ -153,11 +158,17 @@ export default function Map({ currentDate, stateCode }) {
   const [viewState, setViewState] = useState(initialViewState);
   const [hoverInfo, setHoverInfo] = useState(null);
 
+  const resolution =
+    viewState.zoom >= 7.5 ? FIRE_RESOLUTION.HIGH : FIRE_RESOLUTION.LOW;
+
   const year = currentDate.getFullYear();
   const time = currentDate.getTime();
 
-  const allFiresForYearRequest = useAllFiresForYearRequest(year);
-  const completeFiresForYearRequests = useCompleteFiresForYearRequest(year);
+  const allFiresForYearRequest = useAllFiresForYearRequest(year, resolution);
+  const completeFiresForYearRequests = useCompleteFiresForYearRequest(
+    year,
+    resolution
+  );
   const { priorYearRequests } = completeFiresForYearRequests;
   const previousYearRequest = priorYearRequests[priorYearRequests.length - 1];
 

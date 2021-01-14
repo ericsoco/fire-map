@@ -12,6 +12,11 @@ export const INITIAL_STATE = {
   years: {},
 };
 
+export const FIRE_RESOLUTION = {
+  HIGH: 'high',
+  LOW: 'low',
+};
+
 export function getFireDate(fire) {
   // GeoMAC props:
   // - DATE_
@@ -39,25 +44,34 @@ export function getFireAcres(fire) {
 export const loadAllFiresForYear = createRPCActions('loadAllFiresForYear');
 const loadAllFiresForYearReducer =
   createRPCReducer('loadAllFiresForYear', {
-    start: (state, { payload: { year } }) => ({
+    start: (state, { payload: { year, resolution } }) => ({
       ...state,
       [year]: {
         ...state[year],
-        all: loadingRequest(year),
+        all: {
+          ...(state[year]?.all || {}),
+          [resolution]: loadingRequest(year),
+        },
       },
     }),
-    success: (state, { payload: { year, data } }) => ({
+    success: (state, { payload: { year, resolution, data } }) => ({
       ...state,
       [year]: {
         ...state[year],
-        all: loadedRequest(year, data),
+        all: {
+          ...(state[year]?.all || {}),
+          [resolution]: loadedRequest(year, data),
+        },
       },
     }),
-    failure: (state, { payload: { year, error } }) => ({
+    failure: (state, { payload: { year, resolution, error } }) => ({
       ...state,
       [year]: {
         ...state[year],
-        all: errorRequest(year, error),
+        all: {
+          ...(state[year]?.all || {}),
+          [resolution]: errorRequest(year, error),
+        },
       },
     }),
   }) |> reduceOver('years');
@@ -67,25 +81,34 @@ export const loadCompleteFiresForYear = createRPCActions(
 );
 const loadCompleteFiresForYearReducer =
   createRPCReducer('loadCompleteFiresForYear', {
-    start: (state, { payload: { year } }) => ({
+    start: (state, { payload: { year, resolution } }) => ({
       ...state,
       [year]: {
         ...state[year],
-        complete: loadingRequest(year),
+        complete: {
+          ...(state[year]?.complete || {}),
+          [resolution]: loadingRequest(year),
+        },
       },
     }),
-    success: (state, { payload: { year, data } }) => ({
+    success: (state, { payload: { year, resolution, data } }) => ({
       ...state,
       [year]: {
         ...state[year],
-        complete: loadedRequest(year, data),
+        complete: {
+          ...(state[year]?.complete || {}),
+          [resolution]: loadedRequest(year, data),
+        },
       },
     }),
-    failure: (state, { payload: { year, error } }) => ({
+    failure: (state, { payload: { year, resolution, error } }) => ({
       ...state,
       [year]: {
         ...state[year],
-        complete: errorRequest(year, error),
+        complete: {
+          ...(state[year]?.complete || {}),
+          [resolution]: errorRequest(year, error),
+        },
       },
     }),
   }) |> reduceOver('years');
