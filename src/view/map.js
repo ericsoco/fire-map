@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from '@deck.gl/layers';
+import { H3HexagonLayer } from '@deck.gl/geo-layers';
 import GL from '@luma.gl/constants';
 import { StaticMap } from 'react-map-gl';
 import { scalePow } from 'd3-scale';
@@ -253,7 +254,36 @@ export default function Map({ currentDate, stateCode }) {
           />
         )}
 
-        {isLoaded(allFiresForYearRequest) && (
+        {isLoaded(allFiresForYearRequest) &&
+          currentYearData.features.map(feature => {
+            const name = getFireName(feature);
+            const age = currentDate - getFireDate(feature);
+            const alpha = age >= 0 ? alphaScale(age) : 0;
+            return (
+              <H3HexagonLayer
+                id={`currentYear-${name}`}
+                key={name}
+                data={feature.geometry}
+                updateTriggers={{
+                  getFillColor: [currentDate],
+                }}
+                stroked={false}
+                filled={true}
+                extruded={false}
+                lineWidthScale={20}
+                lineWidthMinPixels={2}
+                getHexagon={d => d}
+                getFillColor={[...colors.FIRE, alpha]}
+                getLineColor={[...colors.FIRE, 255]}
+                parameters={layerParameters}
+                pickable={true}
+                // TODO: HOW TO PASS features HERE INSTEAD OF HEX ID
+                // without copying features onto a new object w/ hex for every hex??
+                onHover={setHoverInfo}
+              />
+            );
+          })
+        /*
           // Layer for currently-selected year:
           // renders most-recent perimeter for each fire,
           // with scaled alpha for all perimeters
@@ -279,7 +309,8 @@ export default function Map({ currentDate, stateCode }) {
             pickable={true}
             onHover={setHoverInfo}
           />
-        )}
+          */
+        }
         {renderTooltip(hoverInfo)}
       </DeckGL>
       {isLoading(allFiresForYearRequest) && <LoadingIcon withBackground />}

@@ -18,6 +18,7 @@ const querystring = require('query-string');
 const { argv } = require('yargs');
 const arcgisUtils = require('@esri/arcgis-to-geojson-utils');
 const simplify = require('@turf/simplify');
+const { featureToH3Set } = require('geojson2h3');
 
 const DEFAULT_DEST = 'static/data/fires';
 const ARCGIS_FILENAME = 'arcgis.json';
@@ -26,6 +27,8 @@ const ALL_PERIMETERS_FILENAME = 'allPerimeters.geojson';
 const FINAL_PERIMETERS_FILENAME = 'finalPerimeters.geojson';
 const ALL_PERIMETERS_LOW_RES_FILENAME = 'allPerimeters-low.geojson';
 const FINAL_PERIMETERS_LOW_RES_FILENAME = 'finalPerimeters-low.geojson';
+const H3_PERIMETERS_FILENAME = 'h3Perimeters.geojson';
+const H3_LOW_RES_PERIMETERS_FILENAME = 'h3Perimeters-low.geojson';
 
 const BASE_PATH =
   'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services';
@@ -227,6 +230,7 @@ function processPerimeters(folder, mutableGeojson, params, { lowRes }) {
     mutate: true,
   });
 
+  // All perimeters in the year
   const allFilename = lowRes
     ? ALL_PERIMETERS_LOW_RES_FILENAME
     : ALL_PERIMETERS_FILENAME;
@@ -236,6 +240,24 @@ function processPerimeters(folder, mutableGeojson, params, { lowRes }) {
   console.info(
     `🗜 Filtered and simplified GeoJSON and wrote to ${folder}/${allFilename}`
   );
+
+  // All perimeters, transcribed to H3 hexagons formatted for deck.gl use
+  const h3Filename = lowRes
+    ? H3_LOW_RES_PERIMETERS_FILENAME
+    : H3_PERIMETERS_FILENAME;
+  const h3Resolution = lowRes ? 6 : 8;
+  let h3Features = JSON.parse(allGeojson);
+  h3Features = {
+    features: h3Features.features
+      .map(f => ({
+        geometry: featureToH3Set(f, h3Resolution),
+        properties: f.properties,
+      }))
+      .filter(f => f.geometry.length > 0),
+  };
+  fs.writeFileSync(`${folder}/${h3Filename}`, JSON.stringify(h3Features));
+
+  console.info(`⬡ Hexified GeoJSON and wrote to ${folder}/${h3Filename}`);
 
   mutableGeojson.features = mutableGeojson.features.filter(
     f => f.properties.latest === 'Y'

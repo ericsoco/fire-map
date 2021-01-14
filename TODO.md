@@ -33,6 +33,7 @@
         may need to consider other strategies...
   - [X] load low-res at low zoom (on init?), high res when zooming in
   - [ ] consider hexes at low zoom, polygons at high zoom
+    - [ ] Attempting hexes now, but not sure how to make feature properties available to tooltips... 
   - [ ] load (serially?) in the background after app init
       NOTE: use-complete-fires already does this, only it loads backwards from selected date...didn't i write code once that loaded both forward and backward?
       - [ ] TODO NEXT: do this for low-res perimeters
