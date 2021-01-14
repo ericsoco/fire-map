@@ -31,10 +31,12 @@
         to: .domain([5, 350]).range([20, 2]).exponent(0.15)
         but still end up with very heavy (10+MB) merged files.
         may need to consider other strategies...
-  - [ ] load low-res at low zoom (on init?), high res when zooming in
-    - [ ] consider hexes at low zoom, polygons at high zoom
-    - [ ] load (serially?) in the background after app init
-        NOTE: use-complete-fires already does this, only it loads backwards from selected date...didn't i write code once that loaded both forward and backward?
+  - [X] load low-res at low zoom (on init?), high res when zooming in
+  - [ ] consider hexes at low zoom, polygons at high zoom
+  - [ ] load (serially?) in the background after app init
+      NOTE: use-complete-fires already does this, only it loads backwards from selected date...didn't i write code once that loaded both forward and backward?
+      - [ ] TODO NEXT: do this for low-res perimeters
+      - [ ] load hi-res perimeters in the background on load
   - [X] ohhh wait, each fire folder has multiple perimeters per fire.
         don't have that in merged fires :/
         looks like we are going to have to load all geojsons for each fire,
