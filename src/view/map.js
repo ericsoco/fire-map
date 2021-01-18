@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import DeckGL from '@deck.gl/react';
-import { GeoJsonLayer } from '@deck.gl/layers';
+// import { GeoJsonLayer } from '@deck.gl/layers';
 import { H3HexagonLayer } from '@deck.gl/geo-layers';
 import GL from '@luma.gl/constants';
 import { StaticMap } from 'react-map-gl';
@@ -200,10 +200,37 @@ export default function Map({ currentDate, stateCode }) {
           mapStyle={basemap}
         />
 
-        {isLoaded(previousYearRequest) && (
+        {isLoaded(previousYearRequest) &&
           // Layer for all years before previous:
           // renders only the last perimeter of each fire,
           // with fixed alpha for all perimeters.
+          priorYearsData.features.map(feature => {
+            const name = getFireName(feature);
+            return (
+              <H3HexagonLayer
+                id={`priorYears-${name}`}
+                key={name}
+                data={feature.geometry}
+                updateTriggers={{
+                  getFillColor: [currentDate],
+                }}
+                stroked={false}
+                filled={true}
+                extruded={false}
+                lineWidthScale={20}
+                lineWidthMinPixels={2}
+                getHexagon={d => d}
+                getFillColor={[...colors.FIRE, ALPHA_RANGE.min]}
+                getLineColor={[...colors.FIRE, 255]}
+                parameters={layerParameters}
+                pickable={true}
+                // TODO: HOW TO PASS features HERE INSTEAD OF HEX ID
+                // without copying features onto a new object w/ hex for every hex??
+                onHover={setHoverInfo}
+              />
+            );
+          })
+        /*
           <GeoJsonLayer
             id="priorYears"
             data={priorYearsData}
@@ -223,12 +250,42 @@ export default function Map({ currentDate, stateCode }) {
             pickable={true}
             onHover={setHoverInfo}
           />
-        )}
+          */
+        }
 
-        {isLoaded(previousYearRequest) && (
+        {isLoaded(previousYearRequest) &&
           // Layer for previous year:
           // renders only the last perimeter of each fire,
           // with scaled alpha for all perimeters
+          previousYearData.features.map(feature => {
+            const name = getFireName(feature);
+            const age = currentDate - getFireDate(feature);
+            const alpha = age >= 0 ? alphaScale(age) : 0;
+            return (
+              <H3HexagonLayer
+                id={`prevYear-${name}`}
+                key={name}
+                data={feature.geometry}
+                updateTriggers={{
+                  getFillColor: [currentDate],
+                }}
+                stroked={false}
+                filled={true}
+                extruded={false}
+                lineWidthScale={20}
+                lineWidthMinPixels={1}
+                getHexagon={d => d}
+                getFillColor={[...colors.FIRE, alpha]}
+                getLineColor={[...colors.FIRE, 255]}
+                parameters={layerParameters}
+                pickable={true}
+                // TODO: HOW TO PASS features HERE INSTEAD OF HEX ID
+                // without copying features onto a new object w/ hex for every hex??
+                onHover={setHoverInfo}
+              />
+            );
+          })
+        /*
           <GeoJsonLayer
             id="prevYear"
             data={previousYearData}
@@ -252,9 +309,14 @@ export default function Map({ currentDate, stateCode }) {
             pickable={true}
             onHover={setHoverInfo}
           />
-        )}
+          */
+        }
 
         {isLoaded(allFiresForYearRequest) &&
+          // Layer for currently-selected year:
+          // renders most-recent perimeter for each fire,
+          // with scaled alpha for all perimeters
+          // TODO: render _only_ the most recent perimeter for each fire
           currentYearData.features.map(feature => {
             const name = getFireName(feature);
             const age = currentDate - getFireDate(feature);
@@ -284,10 +346,6 @@ export default function Map({ currentDate, stateCode }) {
             );
           })
         /*
-          // Layer for currently-selected year:
-          // renders most-recent perimeter for each fire,
-          // with scaled alpha for all perimeters
-          // TODO: render _only_ the most recent perimeter for each fire
           <GeoJsonLayer
             id="currentYear"
             data={currentYearData}

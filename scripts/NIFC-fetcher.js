@@ -24,11 +24,13 @@ const DEFAULT_DEST = 'static/data/fires';
 const ARCGIS_FILENAME = 'arcgis.json';
 const RAW_GEOJSON_FILENAME = 'rawPerimeters.geojson';
 const ALL_PERIMETERS_FILENAME = 'allPerimeters.geojson';
-const FINAL_PERIMETERS_FILENAME = 'finalPerimeters.geojson';
 const ALL_PERIMETERS_LOW_RES_FILENAME = 'allPerimeters-low.geojson';
+const ALL_H3_PERIMETERS_FILENAME = 'allH3Perimeters.geojson';
+const ALL_H3_PERIMETERS_LOW_RES_FILENAME = 'allH3Perimeters-low.geojson';
+const FINAL_PERIMETERS_FILENAME = 'finalPerimeters.geojson';
 const FINAL_PERIMETERS_LOW_RES_FILENAME = 'finalPerimeters-low.geojson';
-const H3_PERIMETERS_FILENAME = 'h3Perimeters.geojson';
-const H3_LOW_RES_PERIMETERS_FILENAME = 'h3Perimeters-low.geojson';
+const FINAL_H3_PERIMETERS_FILENAME = 'finalH3Perimeters.geojson';
+const FINAL_H3_PERIMETERS_LOW_RES_FILENAME = 'finalH3Perimeters-low.geojson';
 
 const BASE_PATH =
   'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services';
@@ -242,9 +244,9 @@ function processPerimeters(folder, mutableGeojson, params, { lowRes }) {
   );
 
   // All perimeters, transcribed to H3 hexagons formatted for deck.gl use
-  const h3Filename = lowRes
-    ? H3_LOW_RES_PERIMETERS_FILENAME
-    : H3_PERIMETERS_FILENAME;
+  const allH3Filename = lowRes
+    ? ALL_H3_PERIMETERS_LOW_RES_FILENAME
+    : ALL_H3_PERIMETERS_FILENAME;
   const h3Resolution = lowRes ? 6 : 8;
   let h3Features = JSON.parse(allGeojson);
   h3Features = {
@@ -255,9 +257,9 @@ function processPerimeters(folder, mutableGeojson, params, { lowRes }) {
       }))
       .filter(f => f.geometry.length > 0),
   };
-  fs.writeFileSync(`${folder}/${h3Filename}`, JSON.stringify(h3Features));
+  fs.writeFileSync(`${folder}/${allH3Filename}`, JSON.stringify(h3Features));
 
-  console.info(`⬡ Hexified GeoJSON and wrote to ${folder}/${h3Filename}`);
+  console.info(`⬡ Hexified GeoJSON and wrote to ${folder}/${allH3Filename}`);
 
   mutableGeojson.features = mutableGeojson.features.filter(
     f => f.properties.latest === 'Y'
@@ -269,4 +271,15 @@ function processPerimeters(folder, mutableGeojson, params, { lowRes }) {
   fs.writeFileSync(`${folder}/${finalFilename}`, finalGeojson);
 
   console.info(`💾 Wrote final perimeters to ${folder}/${finalFilename}`);
+
+  h3Features.features = h3Features.features.filter(
+    f => f.properties.latest === 'Y'
+  );
+  const finalH3Filename = lowRes
+    ? FINAL_H3_PERIMETERS_LOW_RES_FILENAME
+    : FINAL_H3_PERIMETERS_FILENAME;
+  const finalH3Features = JSON.stringify(h3Features, null, 2);
+  fs.writeFileSync(`${folder}/${finalH3Filename}`, finalH3Features);
+
+  console.info(`💾 Wrote final h3 perimeters to ${folder}/${finalH3Filename}`);
 }
