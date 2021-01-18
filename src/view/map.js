@@ -104,7 +104,7 @@ function getInitialViewState(stateCode) {
  * Flatten multiple GeoJSON requests into a single FeatureCollection
  */
 function flattenPerimeters(firesRequests) {
-  const features = firesRequests
+  let features = firesRequests
     .filter(isLoaded)
     .map(request => request.data.features)
     .reduce((values, array) => [...values, ...array], []);
@@ -122,7 +122,7 @@ function flattenPerimeters(firesRequests) {
 function extractLatestPerimeters(allFiresRequest, currentTime) {
   const data = isLoaded(allFiresRequest) ? allFiresRequest.data : {};
 
-  const latestPerimeters = Object.keys(data).reduce((lastPerimeters, name) => {
+  let latestPerimeters = Object.keys(data).reduce((lastPerimeters, name) => {
     const latestPerimeterForFire = data[name].find(d => {
       const date = getFireDate(d);
       return date && date <= currentTime;
@@ -132,6 +132,7 @@ function extractLatestPerimeters(allFiresRequest, currentTime) {
     }
     return lastPerimeters;
   }, []);
+
   return {
     type: 'FeatureCollection',
     features: latestPerimeters,
@@ -153,6 +154,9 @@ function renderTooltip(hoverInfo) {
     </Tooltip>
   );
 }
+
+// TODO: where to put this?
+const isH3 = true;
 
 export default function Map({ currentDate, stateCode }) {
   const initialViewState = getInitialViewState(stateCode);
@@ -185,6 +189,21 @@ export default function Map({ currentDate, stateCode }) {
     () => extractLatestPerimeters(allFiresForYearRequest, time),
     [allFiresForYearRequest, time]
   );
+
+  priorYearsData.features.reduce((acc, f) => {
+    const name = getFireName(f);
+    const existing = acc[name];
+    const features = existing ? [...existing.features, f] : [f];
+    const entry = {
+      count: features.length,
+      features,
+    };
+    if (existing) {
+      console.log(`dupe at [${name}]: `, entry);
+    }
+    acc[name] = entry;
+    return acc;
+  }, {});
 
   // TODO: handle status === ERROR
   return (
@@ -220,13 +239,19 @@ export default function Map({ currentDate, stateCode }) {
                 lineWidthScale={20}
                 lineWidthMinPixels={2}
                 getHexagon={d => d}
-                getFillColor={[...colors.FIRE, ALPHA_RANGE.min]}
+                getFillColor={
+                  name === 'Morgan'
+                    ? [0, 128, 255]
+                    : [...colors.FIRE, ALPHA_RANGE.min]
+                }
                 getLineColor={[...colors.FIRE, 255]}
                 parameters={layerParameters}
                 pickable={true}
-                // TODO: HOW TO PASS features HERE INSTEAD OF HEX ID
-                // without copying features onto a new object w/ hex for every hex??
-                onHover={setHoverInfo}
+                onHover={
+                  isH3
+                    ? info => setHoverInfo({ ...info, object: feature })
+                    : setHoverInfo
+                }
               />
             );
           })
@@ -275,13 +300,17 @@ export default function Map({ currentDate, stateCode }) {
                 lineWidthScale={20}
                 lineWidthMinPixels={1}
                 getHexagon={d => d}
-                getFillColor={[...colors.FIRE, alpha]}
+                getFillColor={
+                  name === 'Morgan' ? [0, 128, 255] : [...colors.FIRE, alpha]
+                }
                 getLineColor={[...colors.FIRE, 255]}
                 parameters={layerParameters}
                 pickable={true}
-                // TODO: HOW TO PASS features HERE INSTEAD OF HEX ID
-                // without copying features onto a new object w/ hex for every hex??
-                onHover={setHoverInfo}
+                onHover={
+                  isH3
+                    ? info => setHoverInfo({ ...info, object: feature })
+                    : setHoverInfo
+                }
               />
             );
           })
@@ -335,13 +364,17 @@ export default function Map({ currentDate, stateCode }) {
                 lineWidthScale={20}
                 lineWidthMinPixels={2}
                 getHexagon={d => d}
-                getFillColor={[...colors.FIRE, alpha]}
+                getFillColor={
+                  name === 'Morgan' ? [0, 128, 255] : [...colors.FIRE, alpha]
+                }
                 getLineColor={[...colors.FIRE, 255]}
                 parameters={layerParameters}
                 pickable={true}
-                // TODO: HOW TO PASS features HERE INSTEAD OF HEX ID
-                // without copying features onto a new object w/ hex for every hex??
-                onHover={setHoverInfo}
+                onHover={
+                  isH3
+                    ? info => setHoverInfo({ ...info, object: feature })
+                    : setHoverInfo
+                }
               />
             );
           })

@@ -33,7 +33,13 @@
         may need to consider other strategies...
   - [X] load low-res at low zoom (on init?), high res when zooming in
   - [ ] consider hexes at low zoom, polygons at high zoom
-    - [ ] Attempting hexes now, but not sure how to make feature properties available to tooltips... 
+        not sure i want to roll with hexes, but doing this seems to be
+        revealing some issues with data. going to do as much work here
+        as is useful to uncover + fix data issues, then make call
+        on whether to hex or not to hex.
+    - [X] Make feature properties available to tooltips?
+    - [ ] Found some duplicate features (not H3-specific). e.g.:
+      - [ ] Morgan, 2000 (all filtered out at low-res)
   - [ ] load (serially?) in the background after app init
       NOTE: use-complete-fires already does this, only it loads backwards from selected date...didn't i write code once that loaded both forward and backward?
       - [ ] TODO NEXT: do this for low-res perimeters
