@@ -40,6 +40,7 @@
     - [X] Make feature properties available to tooltips?
     - [ ] Found some duplicate features (not H3-specific). e.g.:
       - [ ] Morgan, 2000 (all filtered out at low-res)
+            Looks like two totally different fires, with the same name. One is in San Gabriel hills N of LA; the other is close to Clear Lake. Maybe what we need to do here is check for `uniquefireidentifier` dupes?
   - [ ] load (serially?) in the background after app init
       NOTE: use-complete-fires already does this, only it loads backwards from selected date...didn't i write code once that loaded both forward and backward?
       - [ ] TODO NEXT: do this for low-res perimeters

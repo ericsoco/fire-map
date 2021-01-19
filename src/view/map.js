@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import DeckGL from '@deck.gl/react';
-// import { GeoJsonLayer } from '@deck.gl/layers';
+import { GeoJsonLayer } from '@deck.gl/layers';
 import { H3HexagonLayer } from '@deck.gl/geo-layers';
 import GL from '@luma.gl/constants';
 import { StaticMap } from 'react-map-gl';
@@ -15,6 +15,7 @@ import {
   FIRE_RESOLUTION,
   getFireAcres,
   getFireDate,
+  getFireId,
   getFireName,
 } from '../state/fires-reducer';
 import { isLoading, isLoaded } from '../utils/request-utils';
@@ -155,7 +156,6 @@ function renderTooltip(hoverInfo) {
   );
 }
 
-// TODO: where to put this?
 const isH3 = true;
 
 export default function Map({ currentDate, stateCode }) {
@@ -220,14 +220,15 @@ export default function Map({ currentDate, stateCode }) {
         />
 
         {isLoaded(previousYearRequest) &&
-          // Layer for all years before previous:
-          // renders only the last perimeter of each fire,
-          // with fixed alpha for all perimeters.
+        // Layer for all years before previous:
+        // renders only the last perimeter of each fire,
+        // with fixed alpha for all perimeters.
+        isH3 ? (
           priorYearsData.features.map(feature => {
             const name = getFireName(feature);
             return (
               <H3HexagonLayer
-                id={`priorYears-${name}`}
+                id={`priorYears-${getFireId(feature)}`}
                 key={name}
                 data={feature.geometry}
                 updateTriggers={{
@@ -239,23 +240,15 @@ export default function Map({ currentDate, stateCode }) {
                 lineWidthScale={20}
                 lineWidthMinPixels={2}
                 getHexagon={d => d}
-                getFillColor={
-                  name === 'Morgan'
-                    ? [0, 128, 255]
-                    : [...colors.FIRE, ALPHA_RANGE.min]
-                }
+                getFillColor={[...colors.FIRE, ALPHA_RANGE.min]}
                 getLineColor={[...colors.FIRE, 255]}
                 parameters={layerParameters}
                 pickable={true}
-                onHover={
-                  isH3
-                    ? info => setHoverInfo({ ...info, object: feature })
-                    : setHoverInfo
-                }
+                onHover={info => setHoverInfo({ ...info, object: feature })}
               />
             );
           })
-        /*
+        ) : (
           <GeoJsonLayer
             id="priorYears"
             data={priorYearsData}
@@ -275,20 +268,20 @@ export default function Map({ currentDate, stateCode }) {
             pickable={true}
             onHover={setHoverInfo}
           />
-          */
-        }
+        )}
 
         {isLoaded(previousYearRequest) &&
-          // Layer for previous year:
-          // renders only the last perimeter of each fire,
-          // with scaled alpha for all perimeters
+        // Layer for previous year:
+        // renders only the last perimeter of each fire,
+        // with scaled alpha for all perimeters
+        isH3 ? (
           previousYearData.features.map(feature => {
             const name = getFireName(feature);
             const age = currentDate - getFireDate(feature);
             const alpha = age >= 0 ? alphaScale(age) : 0;
             return (
               <H3HexagonLayer
-                id={`prevYear-${name}`}
+                id={`prevYear-${getFireId(feature)}`}
                 key={name}
                 data={feature.geometry}
                 updateTriggers={{
@@ -300,21 +293,15 @@ export default function Map({ currentDate, stateCode }) {
                 lineWidthScale={20}
                 lineWidthMinPixels={1}
                 getHexagon={d => d}
-                getFillColor={
-                  name === 'Morgan' ? [0, 128, 255] : [...colors.FIRE, alpha]
-                }
+                getFillColor={[...colors.FIRE, alpha]}
                 getLineColor={[...colors.FIRE, 255]}
                 parameters={layerParameters}
                 pickable={true}
-                onHover={
-                  isH3
-                    ? info => setHoverInfo({ ...info, object: feature })
-                    : setHoverInfo
-                }
+                onHover={info => setHoverInfo({ ...info, object: feature })}
               />
             );
           })
-        /*
+        ) : (
           <GeoJsonLayer
             id="prevYear"
             data={previousYearData}
@@ -338,21 +325,21 @@ export default function Map({ currentDate, stateCode }) {
             pickable={true}
             onHover={setHoverInfo}
           />
-          */
-        }
+        )}
 
         {isLoaded(allFiresForYearRequest) &&
-          // Layer for currently-selected year:
-          // renders most-recent perimeter for each fire,
-          // with scaled alpha for all perimeters
-          // TODO: render _only_ the most recent perimeter for each fire
+        // Layer for currently-selected year:
+        // renders most-recent perimeter for each fire,
+        // with scaled alpha for all perimeters
+        // TODO: render _only_ the most recent perimeter for each fire
+        isH3 ? (
           currentYearData.features.map(feature => {
             const name = getFireName(feature);
             const age = currentDate - getFireDate(feature);
             const alpha = age >= 0 ? alphaScale(age) : 0;
             return (
               <H3HexagonLayer
-                id={`currentYear-${name}`}
+                id={`currentYear-${getFireId(feature)}`}
                 key={name}
                 data={feature.geometry}
                 updateTriggers={{
@@ -364,21 +351,15 @@ export default function Map({ currentDate, stateCode }) {
                 lineWidthScale={20}
                 lineWidthMinPixels={2}
                 getHexagon={d => d}
-                getFillColor={
-                  name === 'Morgan' ? [0, 128, 255] : [...colors.FIRE, alpha]
-                }
+                getFillColor={[...colors.FIRE, alpha]}
                 getLineColor={[...colors.FIRE, 255]}
                 parameters={layerParameters}
                 pickable={true}
-                onHover={
-                  isH3
-                    ? info => setHoverInfo({ ...info, object: feature })
-                    : setHoverInfo
-                }
+                onHover={info => setHoverInfo({ ...info, object: feature })}
               />
             );
           })
-        /*
+        ) : (
           <GeoJsonLayer
             id="currentYear"
             data={currentYearData}
@@ -400,8 +381,7 @@ export default function Map({ currentDate, stateCode }) {
             pickable={true}
             onHover={setHoverInfo}
           />
-          */
-        }
+        )}
         {renderTooltip(hoverInfo)}
       </DeckGL>
       {isLoading(allFiresForYearRequest) && <LoadingIcon withBackground />}
