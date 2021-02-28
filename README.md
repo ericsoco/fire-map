@@ -38,10 +38,10 @@ yarn fetch-fires --year=2018 --state=CA
 yarn process-all-fires
 ```
 
-**2a.** Process fires for a specific state + year if necessary for backfilling / debugging:
+**2a.** Reprocess fires for a specific state + year if necessary for backfilling / debugging:
 
 ```
-yarn process-fires --year=2018 --state=CA
+yarn reprocess-fires --year=2018 --state=CA
 ```
 
 ### Deprecated: GeoMAC data prep

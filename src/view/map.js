@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from '@deck.gl/layers';
-import { H3HexagonLayer } from '@deck.gl/geo-layers';
+import { H3ClusterLayer } from '@deck.gl/geo-layers';
 import GL from '@luma.gl/constants';
 import { StaticMap } from 'react-map-gl';
 import { scalePow } from 'd3-scale';
@@ -156,7 +156,87 @@ function renderTooltip(hoverInfo) {
   );
 }
 
-const isH3 = true;
+const isH3 = false;
+
+/* eslint-disable react/prop-types */
+function renderFireLayer({
+  request,
+  data,
+  currentDate,
+  hoverInfo,
+  setHoverInfo,
+  layerParams,
+}) {
+  if (!isLoaded(request) || !data?.features.length) return null;
+  const { layerName, alphaConst } = layerParams;
+
+  if (isH3) {
+    return data.features.map(feature => {
+      const name = getFireName(feature);
+      const age = currentDate - getFireDate(feature);
+      const alpha = alphaConst || age >= 0 ? alphaScale(age) : 0;
+      const isHovered = hoverInfo?.object === feature;
+      return (
+        <H3ClusterLayer
+          id={`${layerName}-${getFireId(feature)}`}
+          key={name}
+          data={[feature]}
+          updateTriggers={{
+            getFillColor: [currentDate],
+            getLineColor: [currentDate],
+            getHexagons: [currentDate],
+          }}
+          stroked={isHovered}
+          filled={true}
+          extruded={false}
+          lineWidthScale={20}
+          lineWidthMinPixels={1}
+          getHexagons={d => d.geometry}
+          getFillColor={[...colors.FIRE, alpha]}
+          getLineColor={[...colors.FIRE, 255]}
+          parameters={layerParameters}
+          pickable={true}
+          onHover={info => {
+            setHoverInfo(info.picked ? { ...info, object: feature } : null);
+          }}
+        />
+      );
+    });
+  }
+
+  const getFillColor = alphaConst
+    ? [...colors.FIRE, alphaConst]
+    : d => {
+        const age = currentDate - getFireDate(d);
+        const alpha = age >= 0 ? alphaScale(age) : 0;
+        return [...colors.FIRE, alpha];
+      };
+  const hoverObject = hoverInfo?.object;
+  const getLineColor = d =>
+    hoverObject === d ? [...colors.FIRE, 255] : [...colors.FIRE, 0];
+
+  return (
+    <GeoJsonLayer
+      id={layerName}
+      data={data}
+      updateTriggers={{
+        getFillColor: [currentDate],
+        getLineColor: [currentDate, hoverObject],
+      }}
+      stroked={true}
+      filled={true}
+      extruded={false}
+      lineWidthScale={20}
+      lineWidthMinPixels={1}
+      getFillColor={getFillColor}
+      getLineColor={getLineColor}
+      parameters={layerParameters}
+      pickable={true}
+      onHover={setHoverInfo}
+    />
+  );
+}
+/* eslint-enable react/prop-types */
 
 export default function Map({ currentDate, stateCode }) {
   const initialViewState = getInitialViewState(stateCode);
@@ -199,7 +279,7 @@ export default function Map({ currentDate, stateCode }) {
       features,
     };
     if (existing) {
-      console.log(`dupe at [${name}]: `, entry);
+      // console.log(`dupe at [${name}]: `, entry);
     }
     acc[name] = entry;
     return acc;
@@ -213,175 +293,53 @@ export default function Map({ currentDate, stateCode }) {
         viewState={viewState}
         onViewStateChange={({ viewState }) => setViewState(viewState)}
         onViewportChange={v => console.log(v)}
+        getCursor={hoverInfo?.picked ? () => 'pointer' : undefined}
       >
         <StaticMap
           mapboxApiAccessToken={process.env.MapboxAccessToken}
           mapStyle={basemap}
         />
 
-        {isLoaded(previousYearRequest) &&
-        // Layer for all years before previous:
+        {// Layer for all years before previous:
         // renders only the last perimeter of each fire,
         // with fixed alpha for all perimeters.
-        isH3 ? (
-          priorYearsData.features.map(feature => {
-            const name = getFireName(feature);
-            return (
-              <H3HexagonLayer
-                id={`priorYears-${getFireId(feature)}`}
-                key={name}
-                data={feature.geometry}
-                updateTriggers={{
-                  getFillColor: [currentDate],
-                }}
-                stroked={false}
-                filled={true}
-                extruded={false}
-                lineWidthScale={20}
-                lineWidthMinPixels={2}
-                getHexagon={d => d}
-                getFillColor={[...colors.FIRE, ALPHA_RANGE.min]}
-                getLineColor={[...colors.FIRE, 255]}
-                parameters={layerParameters}
-                pickable={true}
-                onHover={info => setHoverInfo({ ...info, object: feature })}
-              />
-            );
-          })
-        ) : (
-          <GeoJsonLayer
-            id="priorYears"
-            data={priorYearsData}
-            updateTriggers={{
-              getFillColor: [currentDate],
-            }}
-            stroked={false}
-            filled={true}
-            extruded={false}
-            lineWidthScale={20}
-            lineWidthMinPixels={2}
-            getFillColor={[...colors.FIRE, ALPHA_RANGE.min]}
-            getLineColor={[...colors.FIRE, 255]}
-            // debug: set stroked={true}
-            // getLineColor={[0, 255, 0, 255]}
-            parameters={layerParameters}
-            pickable={true}
-            onHover={setHoverInfo}
-          />
-        )}
+        renderFireLayer({
+          request: previousYearRequest,
+          data: priorYearsData,
+          currentDate,
+          hoverInfo,
+          setHoverInfo,
+          layerParams: {
+            layerName: 'priorYears',
+            alphaConst: ALPHA_RANGE.min,
+          },
+        })}
 
-        {isLoaded(previousYearRequest) &&
-        // Layer for previous year:
+        {// Layer for previous year:
         // renders only the last perimeter of each fire,
         // with scaled alpha for all perimeters
-        isH3 ? (
-          previousYearData.features.map(feature => {
-            const name = getFireName(feature);
-            const age = currentDate - getFireDate(feature);
-            const alpha = age >= 0 ? alphaScale(age) : 0;
-            return (
-              <H3HexagonLayer
-                id={`prevYear-${getFireId(feature)}`}
-                key={name}
-                data={feature.geometry}
-                updateTriggers={{
-                  getFillColor: [currentDate],
-                }}
-                stroked={false}
-                filled={true}
-                extruded={false}
-                lineWidthScale={20}
-                lineWidthMinPixels={1}
-                getHexagon={d => d}
-                getFillColor={[...colors.FIRE, alpha]}
-                getLineColor={[...colors.FIRE, 255]}
-                parameters={layerParameters}
-                pickable={true}
-                onHover={info => setHoverInfo({ ...info, object: feature })}
-              />
-            );
-          })
-        ) : (
-          <GeoJsonLayer
-            id="prevYear"
-            data={previousYearData}
-            updateTriggers={{
-              getFillColor: [currentDate],
-            }}
-            stroked={false}
-            filled={true}
-            extruded={false}
-            lineWidthScale={20}
-            lineWidthMinPixels={1}
-            getFillColor={d => {
-              const age = currentDate - getFireDate(d);
-              const alpha = age >= 0 ? alphaScale(age) : 0;
-              return [...colors.FIRE, alpha];
-            }}
-            getLineColor={[...colors.FIRE, 255]}
-            // debug: set stroked={true}
-            // getLineColor={[0, 0, 255, 255]}
-            parameters={layerParameters}
-            pickable={true}
-            onHover={setHoverInfo}
-          />
-        )}
+        renderFireLayer({
+          request: previousYearRequest,
+          data: previousYearData,
+          currentDate,
+          hoverInfo,
+          setHoverInfo,
+          layerParams: { layerName: 'prevYear' },
+        })}
 
-        {isLoaded(allFiresForYearRequest) &&
-        // Layer for currently-selected year:
+        {// Layer for currently-selected year:
         // renders most-recent perimeter for each fire,
         // with scaled alpha for all perimeters
         // TODO: render _only_ the most recent perimeter for each fire
-        isH3 ? (
-          currentYearData.features.map(feature => {
-            const name = getFireName(feature);
-            const age = currentDate - getFireDate(feature);
-            const alpha = age >= 0 ? alphaScale(age) : 0;
-            return (
-              <H3HexagonLayer
-                id={`currentYear-${getFireId(feature)}`}
-                key={name}
-                data={feature.geometry}
-                updateTriggers={{
-                  getFillColor: [currentDate],
-                }}
-                stroked={false}
-                filled={true}
-                extruded={false}
-                lineWidthScale={20}
-                lineWidthMinPixels={2}
-                getHexagon={d => d}
-                getFillColor={[...colors.FIRE, alpha]}
-                getLineColor={[...colors.FIRE, 255]}
-                parameters={layerParameters}
-                pickable={true}
-                onHover={info => setHoverInfo({ ...info, object: feature })}
-              />
-            );
-          })
-        ) : (
-          <GeoJsonLayer
-            id="currentYear"
-            data={currentYearData}
-            updateTriggers={{
-              getFillColor: [currentDate],
-            }}
-            stroked={false}
-            filled={true}
-            extruded={false}
-            lineWidthScale={20}
-            lineWidthMinPixels={2}
-            getFillColor={d => {
-              const age = currentDate - getFireDate(d);
-              const alpha = age >= 0 ? alphaScale(age) : 0;
-              return [...colors.FIRE, alpha];
-            }}
-            getLineColor={[...colors.FIRE, 255]}
-            parameters={layerParameters}
-            pickable={true}
-            onHover={setHoverInfo}
-          />
-        )}
+        renderFireLayer({
+          request: allFiresForYearRequest,
+          data: currentYearData,
+          currentDate,
+          hoverInfo,
+          setHoverInfo,
+          layerParams: { layerName: 'currentYear' },
+        })}
+
         {renderTooltip(hoverInfo)}
       </DeckGL>
       {isLoading(allFiresForYearRequest) && <LoadingIcon withBackground />}
