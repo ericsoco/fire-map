@@ -18,14 +18,20 @@ const querystring = require('query-string');
 const { argv } = require('yargs');
 const arcgisUtils = require('@esri/arcgis-to-geojson-utils');
 const simplify = require('@turf/simplify');
+const union = require('@turf/union').default;
+const { featureToH3Set } = require('geojson2h3');
 
 const DEFAULT_DEST = 'static/data/fires';
 const ARCGIS_FILENAME = 'arcgis.json';
 const RAW_GEOJSON_FILENAME = 'rawPerimeters.geojson';
 const ALL_PERIMETERS_FILENAME = 'allPerimeters.geojson';
-const FINAL_PERIMETERS_FILENAME = 'finalPerimeters.geojson';
 const ALL_PERIMETERS_LOW_RES_FILENAME = 'allPerimeters-low.geojson';
+const ALL_H3_PERIMETERS_FILENAME = 'allH3Perimeters.geojson';
+const ALL_H3_PERIMETERS_LOW_RES_FILENAME = 'allH3Perimeters-low.geojson';
+const FINAL_PERIMETERS_FILENAME = 'finalPerimeters.geojson';
 const FINAL_PERIMETERS_LOW_RES_FILENAME = 'finalPerimeters-low.geojson';
+const FINAL_H3_PERIMETERS_FILENAME = 'finalH3Perimeters.geojson';
+const FINAL_H3_PERIMETERS_LOW_RES_FILENAME = 'finalH3Perimeters-low.geojson';
 
 const BASE_PATH =
   'https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services';
@@ -227,6 +233,7 @@ function processPerimeters(folder, mutableGeojson, params, { lowRes }) {
     mutate: true,
   });
 
+  // All perimeters in the year
   const allFilename = lowRes
     ? ALL_PERIMETERS_LOW_RES_FILENAME
     : ALL_PERIMETERS_FILENAME;
@@ -237,8 +244,27 @@ function processPerimeters(folder, mutableGeojson, params, { lowRes }) {
     `🗜 Filtered and simplified GeoJSON and wrote to ${folder}/${allFilename}`
   );
 
-  mutableGeojson.features = mutableGeojson.features.filter(
-    f => f.properties.latest === 'Y'
+  // All perimeters, transcribed to H3 hexagons
+  const allH3Filename = lowRes
+    ? ALL_H3_PERIMETERS_LOW_RES_FILENAME
+    : ALL_H3_PERIMETERS_FILENAME;
+  const h3Resolution = lowRes ? 6 : 8;
+  let h3Features = JSON.parse(allGeojson);
+  h3Features = {
+    features: h3Features.features
+      .map(f => ({
+        geometry: featureToH3Set(f, h3Resolution),
+        properties: f.properties,
+      }))
+      .filter(f => f.geometry.length > 0),
+  };
+  fs.writeFileSync(`${folder}/${allH3Filename}`, JSON.stringify(h3Features));
+
+  console.info(`⬡ Hexified GeoJSON and wrote to ${folder}/${allH3Filename}`);
+
+  mutableGeojson.features = dedupeFinalPerimeters(
+    mutableGeojson.features.filter(f => f.properties.latest === 'Y'),
+    { isH3: false }
   );
   const finalFilename = lowRes
     ? FINAL_PERIMETERS_LOW_RES_FILENAME
@@ -247,4 +273,75 @@ function processPerimeters(folder, mutableGeojson, params, { lowRes }) {
   fs.writeFileSync(`${folder}/${finalFilename}`, finalGeojson);
 
   console.info(`💾 Wrote final perimeters to ${folder}/${finalFilename}`);
+
+  h3Features.features = dedupeFinalPerimeters(
+    h3Features.features.filter(f => f.properties.latest === 'Y'),
+    { isH3: true }
+  );
+  const finalH3Filename = lowRes
+    ? FINAL_H3_PERIMETERS_LOW_RES_FILENAME
+    : FINAL_H3_PERIMETERS_FILENAME;
+  const finalH3Features = JSON.stringify(h3Features, null, 2);
+  fs.writeFileSync(`${folder}/${finalH3Filename}`, finalH3Features);
+
+  console.info(`💾 Wrote final h3 perimeters to ${folder}/${finalH3Filename}`);
+}
+
+/**
+ * Some `latest: 'Y'` perimeters appear more than once in a year,
+ * with matching ids and names but with slightly varying geometry / timestamps.
+ * In these cases, union the geometry and use the most recent timestamp
+ * and the largest acreage.
+ */
+function dedupeFinalPerimeters(features, { isH3 }) {
+  const dedupedPerimeters = features.reduce((map, f) => {
+    const id = getFireId(f);
+
+    const existing = map.get(id);
+
+    let feature = f;
+    if (existing) {
+      const latestDate = Math.max(getFireDate(existing), getFireDate(f));
+      const largestSize = Math.max(getFireAcres(existing), getFireAcres(f));
+      feature = {
+        geometry: isH3
+          ? existing.geometry.reduce(
+              (deduped, hex) =>
+                deduped.includes(hex) ? deduped : deduped.concat(hex),
+              f.geometry
+            )
+          : union(feature.geometry, f.geometry).geometry,
+        properties: {
+          ...f.properties,
+          perimeterdatetime: latestDate,
+          gisacres: largestSize,
+        },
+      };
+    }
+
+    map.set(id, feature);
+    return map;
+  }, new Map());
+  return Array.from(dedupedPerimeters.values());
+}
+
+//
+// Utils below are copied from fires-reducer
+// instead of importing to avoid unnecessary deps.
+//
+
+function getFireId(fire) {
+  return `${fire.properties.uniquefireidentifier}-${getFireName(fire)}`;
+}
+
+function getFireDate(fire) {
+  return fire.properties.perimeterdatetime || 0;
+}
+
+function getFireName(fire) {
+  return fire.properties.incidentname;
+}
+
+function getFireAcres(fire) {
+  return fire.properties.gisacres;
 }

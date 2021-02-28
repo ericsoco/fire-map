@@ -12,16 +12,6 @@
 
 ## Application
 ### geojson loading strategy
-  - rather than load many files, just load one / one merged per year
-    and set visibility of each feature based on its datestamp 🤦‍♀️
-  - however, have to consider bundle size, really want to lazy load...
-  - [X] yeah ok, so load each year as single merged file, on-demand
-  - [X] debug perimeter display over time
-    - [X] load simplified perimeters to improve perf during testing
-    - [X] continue with debugging in `use-complete-fires` and `map.js`
-      - [X] looks like all-fires-for-year is working more or less correctly, only issue is complete-fires not rendering
-      ... Looks request cache is getting popped on every hook call...??
-    - [X] restore previous perimeters once debugging complete
   - [ ] refine perimeter simplification
     - [ ] See `simplifyLowRes` and `acresLowRes` in `NIFC-fetcher`
     - [X] remove `-low` prefix from perimeter filenames in `use-all-fires` / `use-complete-fires` hooks
@@ -32,7 +22,6 @@
         but still end up with very heavy (10+MB) merged files.
         may need to consider other strategies...
   - [X] load low-res at low zoom (on init?), high res when zooming in
-  - [ ] consider hexes at low zoom, polygons at high zoom
   - [ ] load (serially?) in the background after app init
       NOTE: use-complete-fires already does this, only it loads backwards from selected date...didn't i write code once that loaded both forward and backward?
       - [ ] TODO NEXT: do this for low-res perimeters
@@ -41,6 +30,49 @@
         don't have that in merged fires :/
         looks like we are going to have to load all geojsons for each fire,
         tho we only need to load those near the currentDate...
+  - rather than load many files, just load one / one merged per year
+    and set visibility of each feature based on its datestamp 🤦‍♀️
+  - however, have to consider bundle size, really want to lazy load...
+  - [X] yeah ok, so load each year as single merged file, on-demand
+  - [X] debug perimeter display over time
+    - [X] load simplified perimeters to improve perf during testing
+    - [X] continue with debugging in `use-complete-fires` and `map.js`
+      - [X] looks like all-fires-for-year is working more or less correctly, only issue is complete-fires not rendering
+      ... Looks request cache is getting popped on every hook call...??
+    - [X] restore previous perimeters once debugging complete
+  ----
+  - [X] FEB 2021 DEBUGGING
+    DUPLICATES
+      final perimeters should now be deduped properly, for both H3 and non-.
+      However, there are still duplicate perimeters (same id + name, different geometry / acreage) in allPerimeters, e.g. 2000-CA-014532/Ranch in Year 2000.
+      - [X] still seeing same problem when zooming in on 2003: "Unknown GeoJSON type Feature"...just need to run `reprocess-all-fires`.
+      - [X] Found some duplicate features (not H3-specific). e.g.:
+        - [X] Morgan, 2000 (all filtered out at low-res)
+              Looks like two totally different fires, with the same name. One is in San Gabriel hills N of LA; the other is close to Clear Lake. Maybe what we need to do here is check for `uniquefireidentifier` dupes?
+              > Yup, two fires, same name (Morgan), different IDs. Deduping w/ `dedupeFinalPerimeters` works.
+    DEBUGGING
+      -- FEB 15 PROGRESS --
+      In the process of abandoning H3; not worth trying to overcome the perf issues as I'd prefer to go with polygons / geojson.
+      Still have to work through data quality issues and tooltip displaying incorrect fire; refactored map.js to DRY out the three layers (prior, previous, current) and to keep H3 around for debugging.
+      ---------------------
+      -- FEB 28 PROGRESS --
+      - [X] not sure if tooltip issues yet resolved:
+            Zooming in to LA at end of 2006 results in all fires labeled "J Black" from 2001...not sure wassup.
+            Looks like only priorYears H3HexLayer is accepting mouse input, it's blocking mouse interaction with layers below. Something about H3 layers? Or may be specifically the J Black fire has some bad geometry...? 
+      - [X] high-res geojson for previousYearRequest.data contains one malformed feature, at index 65: "Ranch" fire has extra level of nesting, Feature instead of Polygon...
+        - [X] Looks like I'm flattening dupes incorrectly. I think Ranch is a dupe in 2000 data, but deduping is resulting in a malformed feature.
+  ----
+  - [X] consider hexes at low zoom, polygons at high zoom
+        not sure i want to roll with hexes, but doing this seems to be
+        revealing some issues with data. going to do as much work here
+        as is useful to uncover + fix data issues, then make call
+        on whether to hex or not to hex.
+    - [X] Make feature properties available to tooltips?
+      - [-] Using H3HexagonLayer causes weirdness with tooltips: hoverInfo is often incorrect, e.g. showing a very small fire (Salt, 2003) instead of the large one hovered on (Simi Incident).
+      - [-] However, using H3ClusterLayer does work well with tooltips, but performance is so bad that it causes Canary to crash, and Firefox barely performs. Is there some memoization I need to do?
+        - [-] Seems related to bumping deck.gl to 8.4.x...reverted to 8.0.x and appears better. However, tooltip hover perf is really bad (it's bad with HexagonLayer, but even worse with ClusterLayer). Why??
+        --> It is directly related to number of hexagons -- once zoomed in, perf is substantially worse. **Have to abandon H3.**
+
 
 ### fires layer
   - [X] perf: handle incremental loads with one layer / data payload

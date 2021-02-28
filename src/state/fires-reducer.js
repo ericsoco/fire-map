@@ -17,6 +17,14 @@ export const FIRE_RESOLUTION = {
   LOW: 'low',
 };
 
+/**
+ * Get an actually-unique identifier for a fire by concatenating
+ * the "unique" ID (which is not unique) with the name.
+ */
+export function getFireId(fire) {
+  return `${fire.properties.uniquefireidentifier}-${getFireName(fire)}`;
+}
+
 export function getFireDate(fire) {
   // GeoMAC props:
   // - DATE_

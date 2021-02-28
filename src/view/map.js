@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from '@deck.gl/layers';
+import { H3ClusterLayer } from '@deck.gl/geo-layers';
 import GL from '@luma.gl/constants';
 import { StaticMap } from 'react-map-gl';
 import { scalePow } from 'd3-scale';
@@ -14,6 +15,7 @@ import {
   FIRE_RESOLUTION,
   getFireAcres,
   getFireDate,
+  getFireId,
   getFireName,
 } from '../state/fires-reducer';
 import { isLoading, isLoaded } from '../utils/request-utils';
@@ -103,7 +105,7 @@ function getInitialViewState(stateCode) {
  * Flatten multiple GeoJSON requests into a single FeatureCollection
  */
 function flattenPerimeters(firesRequests) {
-  const features = firesRequests
+  let features = firesRequests
     .filter(isLoaded)
     .map(request => request.data.features)
     .reduce((values, array) => [...values, ...array], []);
@@ -121,7 +123,7 @@ function flattenPerimeters(firesRequests) {
 function extractLatestPerimeters(allFiresRequest, currentTime) {
   const data = isLoaded(allFiresRequest) ? allFiresRequest.data : {};
 
-  const latestPerimeters = Object.keys(data).reduce((lastPerimeters, name) => {
+  let latestPerimeters = Object.keys(data).reduce((lastPerimeters, name) => {
     const latestPerimeterForFire = data[name].find(d => {
       const date = getFireDate(d);
       return date && date <= currentTime;
@@ -131,6 +133,7 @@ function extractLatestPerimeters(allFiresRequest, currentTime) {
     }
     return lastPerimeters;
   }, []);
+
   return {
     type: 'FeatureCollection',
     features: latestPerimeters,
@@ -152,6 +155,88 @@ function renderTooltip(hoverInfo) {
     </Tooltip>
   );
 }
+
+const isH3 = false;
+
+/* eslint-disable react/prop-types */
+function renderFireLayer({
+  request,
+  data,
+  currentDate,
+  hoverInfo,
+  setHoverInfo,
+  layerParams,
+}) {
+  if (!isLoaded(request) || !data?.features.length) return null;
+  const { layerName, alphaConst } = layerParams;
+
+  if (isH3) {
+    return data.features.map(feature => {
+      const name = getFireName(feature);
+      const age = currentDate - getFireDate(feature);
+      const alpha = alphaConst || age >= 0 ? alphaScale(age) : 0;
+      const isHovered = hoverInfo?.object === feature;
+      return (
+        <H3ClusterLayer
+          id={`${layerName}-${getFireId(feature)}`}
+          key={name}
+          data={[feature]}
+          updateTriggers={{
+            getFillColor: [currentDate],
+            getLineColor: [currentDate],
+            getHexagons: [currentDate],
+          }}
+          stroked={isHovered}
+          filled={true}
+          extruded={false}
+          lineWidthScale={20}
+          lineWidthMinPixels={1}
+          getHexagons={d => d.geometry}
+          getFillColor={[...colors.FIRE, alpha]}
+          getLineColor={[...colors.FIRE, 255]}
+          parameters={layerParameters}
+          pickable={true}
+          onHover={info => {
+            setHoverInfo(info.picked ? { ...info, object: feature } : null);
+          }}
+        />
+      );
+    });
+  }
+
+  const getFillColor = alphaConst
+    ? [...colors.FIRE, alphaConst]
+    : d => {
+        const age = currentDate - getFireDate(d);
+        const alpha = age >= 0 ? alphaScale(age) : 0;
+        return [...colors.FIRE, alpha];
+      };
+  const hoverObject = hoverInfo?.object;
+  const getLineColor = d =>
+    hoverObject === d ? [...colors.FIRE, 255] : [...colors.FIRE, 0];
+
+  return (
+    <GeoJsonLayer
+      id={layerName}
+      data={data}
+      updateTriggers={{
+        getFillColor: [currentDate],
+        getLineColor: [currentDate, hoverObject],
+      }}
+      stroked={true}
+      filled={true}
+      extruded={false}
+      lineWidthScale={20}
+      lineWidthMinPixels={1}
+      getFillColor={getFillColor}
+      getLineColor={getLineColor}
+      parameters={layerParameters}
+      pickable={true}
+      onHover={setHoverInfo}
+    />
+  );
+}
+/* eslint-enable react/prop-types */
 
 export default function Map({ currentDate, stateCode }) {
   const initialViewState = getInitialViewState(stateCode);
@@ -185,6 +270,21 @@ export default function Map({ currentDate, stateCode }) {
     [allFiresForYearRequest, time]
   );
 
+  priorYearsData.features.reduce((acc, f) => {
+    const name = getFireName(f);
+    const existing = acc[name];
+    const features = existing ? [...existing.features, f] : [f];
+    const entry = {
+      count: features.length,
+      features,
+    };
+    if (existing) {
+      // console.log(`dupe at [${name}]: `, entry);
+    }
+    acc[name] = entry;
+    return acc;
+  }, {});
+
   // TODO: handle status === ERROR
   return (
     <StyledContainer>
@@ -193,93 +293,53 @@ export default function Map({ currentDate, stateCode }) {
         viewState={viewState}
         onViewStateChange={({ viewState }) => setViewState(viewState)}
         onViewportChange={v => console.log(v)}
+        getCursor={hoverInfo?.picked ? () => 'pointer' : undefined}
       >
         <StaticMap
           mapboxApiAccessToken={process.env.MapboxAccessToken}
           mapStyle={basemap}
         />
 
-        {isLoaded(previousYearRequest) && (
-          // Layer for all years before previous:
-          // renders only the last perimeter of each fire,
-          // with fixed alpha for all perimeters.
-          <GeoJsonLayer
-            id="priorYears"
-            data={priorYearsData}
-            updateTriggers={{
-              getFillColor: [currentDate],
-            }}
-            stroked={false}
-            filled={true}
-            extruded={false}
-            lineWidthScale={20}
-            lineWidthMinPixels={2}
-            getFillColor={[...colors.FIRE, ALPHA_RANGE.min]}
-            getLineColor={[...colors.FIRE, 255]}
-            // debug: set stroked={true}
-            // getLineColor={[0, 255, 0, 255]}
-            parameters={layerParameters}
-            pickable={true}
-            onHover={setHoverInfo}
-          />
-        )}
+        {// Layer for all years before previous:
+        // renders only the last perimeter of each fire,
+        // with fixed alpha for all perimeters.
+        renderFireLayer({
+          request: previousYearRequest,
+          data: priorYearsData,
+          currentDate,
+          hoverInfo,
+          setHoverInfo,
+          layerParams: {
+            layerName: 'priorYears',
+            alphaConst: ALPHA_RANGE.min,
+          },
+        })}
 
-        {isLoaded(previousYearRequest) && (
-          // Layer for previous year:
-          // renders only the last perimeter of each fire,
-          // with scaled alpha for all perimeters
-          <GeoJsonLayer
-            id="prevYear"
-            data={previousYearData}
-            updateTriggers={{
-              getFillColor: [currentDate],
-            }}
-            stroked={false}
-            filled={true}
-            extruded={false}
-            lineWidthScale={20}
-            lineWidthMinPixels={1}
-            getFillColor={d => {
-              const age = currentDate - getFireDate(d);
-              const alpha = age >= 0 ? alphaScale(age) : 0;
-              return [...colors.FIRE, alpha];
-            }}
-            getLineColor={[...colors.FIRE, 255]}
-            // debug: set stroked={true}
-            // getLineColor={[0, 0, 255, 255]}
-            parameters={layerParameters}
-            pickable={true}
-            onHover={setHoverInfo}
-          />
-        )}
+        {// Layer for previous year:
+        // renders only the last perimeter of each fire,
+        // with scaled alpha for all perimeters
+        renderFireLayer({
+          request: previousYearRequest,
+          data: previousYearData,
+          currentDate,
+          hoverInfo,
+          setHoverInfo,
+          layerParams: { layerName: 'prevYear' },
+        })}
 
-        {isLoaded(allFiresForYearRequest) && (
-          // Layer for currently-selected year:
-          // renders most-recent perimeter for each fire,
-          // with scaled alpha for all perimeters
-          // TODO: render _only_ the most recent perimeter for each fire
-          <GeoJsonLayer
-            id="currentYear"
-            data={currentYearData}
-            updateTriggers={{
-              getFillColor: [currentDate],
-            }}
-            stroked={false}
-            filled={true}
-            extruded={false}
-            lineWidthScale={20}
-            lineWidthMinPixels={2}
-            getFillColor={d => {
-              const age = currentDate - getFireDate(d);
-              const alpha = age >= 0 ? alphaScale(age) : 0;
-              return [...colors.FIRE, alpha];
-            }}
-            getLineColor={[...colors.FIRE, 255]}
-            parameters={layerParameters}
-            pickable={true}
-            onHover={setHoverInfo}
-          />
-        )}
+        {// Layer for currently-selected year:
+        // renders most-recent perimeter for each fire,
+        // with scaled alpha for all perimeters
+        // TODO: render _only_ the most recent perimeter for each fire
+        renderFireLayer({
+          request: allFiresForYearRequest,
+          data: currentYearData,
+          currentDate,
+          hoverInfo,
+          setHoverInfo,
+          layerParams: { layerName: 'currentYear' },
+        })}
+
         {renderTooltip(hoverInfo)}
       </DeckGL>
       {isLoading(allFiresForYearRequest) && <LoadingIcon withBackground />}
