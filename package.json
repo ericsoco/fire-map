@@ -102,10 +102,10 @@
       "pre-commit": "yarn lint && yarn prettier"
     }
   },
-  "default": "dist/index.html",
+  "app": "dist/index.html",
   "targets": {
-    "default": {
-      "publicUrl": "./"
+    "app": {
+      "publicUrl": "./fire-map/"
     }
   }
 }
