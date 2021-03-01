@@ -77,9 +77,9 @@
   "scripts": {
     "lint": "eslint src",
     "prettier": "prettier --write \"src/**/*.{js,json}\"",
-    "start": "parcel --no-autoinstall index.html 'static/data/fires/*/California/*.geojson'",
+    "start": "NODE_ENV=development parcel --no-autoinstall index.html 'static/data/fires/*/California/*.geojson'",
     "build": "rm -rf ./dist; parcel build index.html 'static/data/fires/*/California/*.geojson'",
-    "deploy": "yarn build && yarn gh-pages -d ./dist",
+    "deploy": "NODE_ENV=production yarn build && yarn gh-pages -d ./dist",
     "clean": "rm -rf .parcel-cache",
     "test": "echo \"Error: no test specified\" && exit 1",
     "fetch-fires": "node ./scripts/NIFC-fetcher.js",

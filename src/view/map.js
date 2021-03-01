@@ -271,17 +271,14 @@ export default function Map({ currentDate, stateCode }) {
   );
 
   priorYearsData.features.reduce((acc, f) => {
-    const name = getFireName(f);
-    const existing = acc[name];
+    const id = getFireId(f);
+    const existing = acc[id];
     const features = existing ? [...existing.features, f] : [f];
     const entry = {
       count: features.length,
       features,
     };
-    if (existing) {
-      // console.log(`dupe at [${name}]: `, entry);
-    }
-    acc[name] = entry;
+    acc[id] = entry;
     return acc;
   }, {});
 
@@ -292,7 +289,7 @@ export default function Map({ currentDate, stateCode }) {
         controller={true}
         viewState={viewState}
         onViewStateChange={({ viewState }) => setViewState(viewState)}
-        onViewportChange={v => console.log(v)}
+        // onViewportChange={v => console.log(v)}
         getCursor={hoverInfo?.picked ? () => 'pointer' : undefined}
       >
         <StaticMap

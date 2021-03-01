@@ -81,7 +81,7 @@ async function main() {
     dest: argv.dest || DEFAULT_DEST,
     // Perimeters smaller than this are filtered out of final output
     acres: argv.acres || 100,
-    acresLowRes: argv.acresLowRes || 10000,
+    acresLowRes: argv.acresLowRes || 5000,
     simplify: argv.simplify || 0.001,
     simplifyLowRes: argv.simplifyLowRes || 0.01,
     reprocess: argv.reprocess || false,

@@ -48,10 +48,14 @@ const store = createStore(
 // whitelists only states present in config
 const supportedStates = Object.keys(stateConfigs).join('|');
 
+// Set in .env files, statically replaced by Parcel
+const basename = process.env.ASSET_PATH;
+console.log({ basename });
+
 render(
   <Provider store={store}>
     <ThemeProvider theme={theme}>
-      <BrowserRouter>
+      <BrowserRouter basename={basename}>
         <Switch>
           <Route path={'/'} exact component={App} />
           <Route path={`/:stateCode(${supportedStates})`} component={App} />

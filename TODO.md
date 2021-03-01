@@ -14,6 +14,7 @@
 ### geojson loading strategy
   - [ ] refine perimeter simplification
     - [ ] See `simplifyLowRes` and `acresLowRes` in `NIFC-fetcher`
+    - [X] Filter out < 5000 acre fires from low-res
     - [X] remove `-low` prefix from perimeter filenames in `use-all-fires` / `use-complete-fires` hooks
   - [ ] even some of these are heavy, simplify geometry more
         note: increased simplification once,
@@ -22,6 +23,9 @@
         but still end up with very heavy (10+MB) merged files.
         may need to consider other strategies...
   - [X] load low-res at low zoom (on init?), high res when zooming in
+  - [ ] 2020 data
+        After 2019, `Historic_Geomac_Perimeters_` no longer exists. Need to switch, possibly to National Incident Feature Service (https://data-nifc.opendata.arcgis.com/datasets/national-incident-feature-service-archive-2020). How to query by state/year/etc?
+        Couldn't find anything available on NIFC's ArcGIS server. Sent email to BLM_FA_NIFC_Comments@blm.gov Feb 28; if no response, try social media https://twitter.com/NIFC_Fire
   - [ ] load (serially?) in the background after app init
       NOTE: use-complete-fires already does this, only it loads backwards from selected date...didn't i write code once that loaded both forward and backward?
       - [ ] TODO NEXT: do this for low-res perimeters
